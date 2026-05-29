@@ -74,6 +74,17 @@ h1 {
         .detail-title { font-size: 1.2rem; font-weight: bold; margin-bottom: 8px; }
         .detail-author { font-size: 0.85rem; color: #78909C; margin-bottom: 12px; border-bottom: 1px solid #ECEFF1; padding-bottom: 8px; }
         .detail-content { font-size: 0.95rem; color: #37474F; white-space: pre-wrap; line-height: 1.5; }
+            /* 사진 확대 모달 스타일 */
+        .zoom-modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.9); z-index: 200; justify-content: center; align-items: center;
+            cursor: zoom-out;
+        }
+        .zoom-img { max-width: 95%; max-height: 95%; object-fit: contain; border-radius: 4px; }
+        
+        /* 기존 상세보기 사진에 마우스를 올리면 돋보기 모양으로 변하게 수정 */
+        .detail-img { cursor: zoom-in; }
+
     </style>
 
     <!-- 구글 Firebase 라이브러리 -->
@@ -128,7 +139,10 @@ h1 {
             <div class="btn-area">
                 <button type="button" id="deleteBtn" class="btn btn-delete">삭제</button>
                 <button type="button" class="btn btn-close" onclick="closeModal('detailModal')">닫기</button>
-            </div>
+            </div> <div id="zoomModal" class="zoom-modal" onclick="closeZoom()">
+        <img id="zoomImg" class="zoom-img" src="" alt="확대 이미지">
+    </div>
+
         </div>
     </div>
 
@@ -289,8 +303,13 @@ const firebaseConfig = {
             document.getElementById('detailAuthor').innerText = `작성자: ${post.author}`;
             document.getElementById('detailContent').innerText = post.content;
             document.getElementById('deleteBtn').onclick = () => deletePost(post.id);
+            
+            // ★ 추가: 상세창의 사진을 누르면 확대 함수가 실행되도록 연결
+            document.getElementById('detailImg').onclick = () => zoomImage(post.image);
+            
             openModal('detailModal');
         }
+
 
         function deletePost(id) {
             if(confirm("이 맛집 게시글을 정말 삭제하시겠습니까?")) {
@@ -299,6 +318,17 @@ const firebaseConfig = {
         }
 
         window.addEventListener('resize', renderBubbles);
+                // 사진 확대 함수
+        function zoomImage(imgSrc) {
+            document.getElementById('zoomImg').src = imgSrc;
+            document.getElementById('zoomModal').style.display = 'flex';
+        }
+
+        // 사진 축소(닫기) 함수
+        function closeZoom() {
+            document.getElementById('zoomModal').style.display = 'none';
+        }
+
     </script>
 </body>
 </html>
