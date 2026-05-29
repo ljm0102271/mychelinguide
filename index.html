@@ -5,200 +5,63 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MYchelin guide</title>
     <style>
-        /* 기본 스타일 및 배경 (파스텔톤 연하늘색) */
         body {
-            margin: 0;
-            padding: 0;
-            background-color: #E3F2FD; /* 파스텔 연하늘 */
+            margin: 0; padding: 0;
+            background-color: #E3F2FD;
             font-family: 'Noto Sans KR', sans-serif;
-            min-height: 100vh;
-            overflow-x: hidden;
-            position: relative;
+            min-height: 100vh; overflow-x: hidden; position: relative;
         }
-
-        /* 상단 헤더 영역 */
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-
-        h1 {
-            margin: 0;
-            font-size: 1.5rem;
-            color: #37474F;
-            font-weight: 700;
-        }
-
-        /* 글쓰기 버튼 (파스텔톤 남색) */
+        header { display: flex; justify-content: space-between; align-items: center; padding: 20px; box-sizing: border-box; }
+        h1 { margin: 0; font-size: 1.5rem; color: #37474F; font-weight: 700; }
         .write-btn {
-            background-color: #3F51B5; /* 파스텔 남색 */
-            color: white;
-            border: none;
-            padding: 10px 18px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            transition: background-color 0.2s;
+            background-color: #3F51B5; color: white; border: none; padding: 10px 18px;
+            border-radius: 20px; font-size: 0.9rem; font-weight: bold; cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: background-color 0.2s;
         }
-        .write-btn:hover {
-            background-color: #303F9F;
-        }
-
-        /* 버블들이 배치되는 메인 컨테이너 */
-        #bubble-container {
-            position: relative;
-            width: 100%;
-            height: calc(100vh - 100px);
-            box-sizing: border-box;
-        }
-
-        /* 버블 아이템 스타일 (반투명 썸네일) */
+        .write-btn:hover { background-color: #303F9F; }
+        #bubble-container { position: relative; width: 100%; height: calc(100vh - 100px); box-sizing: border-box; }
         .bubble-item {
-            position: absolute;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            cursor: pointer;
-            transition: transform 0.2s;
-            animation: float 4s ease-in-out infinite alternate;
+            position: absolute; display: flex; flex-direction: column; align-items: center;
+            cursor: pointer; transition: transform 0.2s; animation: float 4s ease-in-out infinite alternate;
         }
-        .bubble-item:hover {
-            transform: scale(1.05);
-            z-index: 10;
-        }
-
+        .bubble-item:hover { transform: scale(1.05); z-index: 10; }
         .bubble {
-            width: 85px;
-            height: 85px;
-            border-radius: 50%;
-            background-size: cover;
-            background-position: center;
-            background-color: rgba(255, 255, 255, 0.5); /* 사진 없을 때 기본 반투명 */
-            border: 2px solid rgba(255, 255, 255, 0.6);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-            backdrop-filter: blur(2px); /* 반투명 느낌 강조 */
-            overflow: hidden;
+            width: 85px; height: 85px; border-radius: 50%; background-size: cover; background-position: center;
+            background-color: rgba(255, 255, 255, 0.5); border: 2px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08); backdrop-filter: blur(2px); overflow: hidden;
         }
-
-        /* 사진 위에 반투명 오버레이 레이어 */
-        .bubble.has-img {
-            position: relative;
-        }
-        .bubble.has-img::after {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(255, 255, 255, 0.25); /* 사진을 약간 반투명하게 덮음 */
-        }
-
+        .bubble.has-img { position: relative; }
+        .bubble.has-img::after { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255, 255, 255, 0.25); }
         .bubble-info {
-            margin-top: 6px;
-            font-size: 0.75rem;
-            color: #455A64;
-            background: rgba(255, 255, 255, 0.6);
-            padding: 2px 8px;
-            border-radius: 10px;
-            text-align: center;
-            max-width: 90px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            margin-top: 6px; font-size: 0.75rem; color: #455A64; background: rgba(255, 255, 255, 0.6);
+            padding: 2px 8px; border-radius: 10px; text-align: center; max-width: 90px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
-
-        /* 버블 둥둥 뜨는 애니메이션 효과 */
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            100% { transform: translateY(-10px); }
-        }
-
-        /* 모달 창 공통 (글쓰기 & 상세보기) */
+        @keyframes float { 0% { transform: translateY(0px); } 100% { transform: translateY(-10px); } }
         .modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0,0,0,0.5);
-            z-index: 100;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-            box-sizing: border-box;
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.5); z-index: 100; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;
         }
-
-        .modal-content {
-            background-color: white;
-            padding: 20px;
-            border-radius: 16px;
-            width: 100%;
-            max-width: 400px;
-            box-sizing: border-box;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-
-        .modal h2 {
-            margin-top: 0;
-            font-size: 1.3rem;
-            color: #37474F;
-        }
-
-        /* 폼 입력 스타일 */
-        .form-group {
-            margin-bottom: 12px;
-        }
-        .form-group label {
-            display: block;
-            font-size: 0.85rem;
-            color: #546E7A;
-            margin-bottom: 4px;
-        }
-        .form-group input, .form-group textarea {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #CFD8DC;
-            border-radius: 8px;
-            box-sizing: border-box;
-            font-size: 0.95rem;
-        }
-        .form-group textarea {
-            height: 100px;
-            resize: none;
-        }
-
-        .btn-area {
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-            margin-top: 15px;
-        }
-
-        .btn {
-            padding: 10px 16px;
-            border-radius: 8px;
-            border: none;
-            cursor: pointer;
-            font-weight: bold;
-        }
+        .modal-content { background-color: white; padding: 20px; border-radius: 16px; width: 100%; max-width: 400px; box-sizing: border-box; max-height: 90vh; overflow-y: auto; }
+        .modal h2 { margin-top: 0; font-size: 1.3rem; color: #37474F; }
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; font-size: 0.85rem; color: #546E7A; margin-bottom: 4px; }
+        .form-group input, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 8px; box-sizing: border-box; font-size: 0.95rem; }
+        .form-group textarea { height: 100px; resize: none; }
+        .btn-area { display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px; }
+        .btn { padding: 10px 16px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; }
         .btn-submit { background-color: #3F51B5; color: white; }
         .btn-close { background-color: #ECEFF1; color: #546E7A; }
         .btn-delete { background-color: #FF5252; color: white; margin-right: auto; }
-
-        /* 상세보기 모달 내부 스타일 */
-        .detail-img {
-            width: 100%;
-            max-height: 200px;
-            object-fit: cover;
-            border-radius: 8px;
-            margin-bottom: 12px;
-        }
+        .detail-img { width: 100%; max-height: 200px; object-fit: cover; border-radius: 8px; margin-bottom: 12px; }
         .detail-title { font-size: 1.2rem; font-weight: bold; margin-bottom: 8px; }
         .detail-author { font-size: 0.85rem; color: #78909C; margin-bottom: 12px; border-bottom: 1px solid #ECEFF1; padding-bottom: 8px; }
         .detail-content { font-size: 0.95rem; color: #37474F; white-space: pre-wrap; line-height: 1.5; }
     </style>
+
+    <!-- 구글 Firebase 시스템 탑재 -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
@@ -209,6 +72,7 @@
 
     <div id="bubble-container"></div>
 
+    <!-- 1. 글쓰기 모달 -->
     <div id="writeModal" class="modal">
         <div class="modal-content">
             <h2>맛집 등록하기</h2>
@@ -231,12 +95,13 @@
                 </div>
                 <div class="btn-area">
                     <button type="button" class="btn btn-close" onclick="closeModal('writeModal')">취소</button>
-                    <button type="submit" class="btn btn-submit">등록하기</button>
+                    <button type="submit" class="btn btn-submit" id="submitBtn">등록하기</button>
                 </div>
             </form>
         </div>
     </div>
 
+    <!-- 2. 상세보기 모달 -->
     <div id="detailModal" class="modal">
         <div class="modal-content">
             <img id="detailImg" class="detail-img" src="" alt="맛집 사진">
@@ -251,20 +116,41 @@
     </div>
 
     <script>
-        // 게시글 데이터 배열 (브라우저 저장소인 LocalStorage를 활용해 유지가 됩니다)
-        let posts = JSON.parse(localStorage.getItem('mychelin_posts')) || [];
+        // ★★★ [중요] 여기에 아까 구글 화면(2단계)에 뜬 본인의 설정값으로 덮어씌우세요! ★★★
+const firebaseConfig = {
+  apiKey: "AIzaSyBYdqWntYfCuN7x1_ld-rDbJCnfMRAZkHE",
+  authDomain: "mychelinguide.firebaseapp.com",
+  projectId: "mychelinguide",
+  storageBucket: "mychelinguide.firebasestorage.app",
+  messagingSenderId: "551648819304",
+  appId: "1:551648819304:web:af76c1742ac779c70563dd",
+  measurementId: "G-FKLGJ899D7"
+};
 
-        // 모달 열기/닫기 함수
+        // Firebase 초기화 및 연결
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        let posts = [];
+
         function openModal(id) { document.getElementById(id).style.display = 'flex'; }
         function closeModal(id) { 
             document.getElementById(id).style.display = 'none'; 
             if(id === 'writeModal') document.getElementById('postForm').reset();
         }
 
-        // 화면 크기에 맞춰 버블들을 무작위 배치하는 함수
+        // 구글 서버에서 실시간으로 데이터 가져오기 (누가 글 쓰면 새로고침 없이 바로 뜸)
+        db.collection("posts").onSnapshot((snapshot) => {
+            posts = [];
+            snapshot.forEach((doc) => {
+                posts.push({ id: doc.id, ...doc.data() });
+            });
+            renderBubbles();
+        });
+
         function renderBubbles() {
             const container = document.getElementById('bubble-container');
-            container.innerHTML = ''; // 기존 버블 초기화
+            container.innerHTML = '';
 
             const containerWidth = container.clientWidth;
             const containerHeight = container.clientHeight;
@@ -273,21 +159,20 @@
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'bubble-item';
 
-                // 모바일 화면 밖으로 벗어나지 않도록 안전 마진(85px)을 두고 랜덤 위치 계산
-                const randomX = Math.random() * (containerWidth - 95) + 5;
-                const randomY = Math.random() * (containerHeight - 120) + 5;
+                // 기기마다 같은 위치에 배치되도록 글 ID를 활용한 고정형 랜덤 위치 계산
+                let hash = 0;
+                for (let i = 0; i < post.id.length; i++) hash = post.id.charCodeAt(i) + ((hash << 5) - hash);
+                const posSeedX = Math.abs(Math.sin(hash)) * (containerWidth - 95) + 5;
+                const posSeedY = Math.abs(Math.cos(hash)) * (containerHeight - 120) + 5;
                 
-                itemDiv.style.left = `${randomX}px`;
-                itemDiv.style.top = `${randomY}px`;
-                // 버블마다 움직임에 약간의 시차를 줌
-                itemDiv.style.animationDelay = `${Math.random() * 2}s`; 
+                itemDiv.style.left = `${posSeedX}px`;
+                itemDiv.style.top = `${posSeedY}px`;
+                itemDiv.style.animationDelay = `${(hash % 10) * 0.2}s`;
 
-                // 반투명 썸네일 버블 생성
                 const bubble = document.createElement('div');
                 bubble.className = 'bubble has-img';
                 bubble.style.backgroundImage = `url(${post.image})`;
 
-                // 버블 아래 학번 이름 표시
                 const info = document.createElement('div');
                 info.className = 'bubble-info';
                 info.innerText = post.author;
@@ -295,16 +180,18 @@
                 itemDiv.appendChild(bubble);
                 itemDiv.appendChild(info);
 
-                // 버블 클릭 시 상세보기 모달 연결
                 itemDiv.onclick = () => showDetail(index);
-
                 container.appendChild(itemDiv);
             });
         }
 
-        // 게시글 저장 함수
+        // 구글 서버에 글 저장하기
         function savePost(e) {
             e.preventDefault();
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.innerText = "업로드 중...";
+            submitBtn.disabled = true;
+
             const author = document.getElementById('author').value;
             const title = document.getElementById('title').value;
             const content = document.getElementById('content').value;
@@ -314,22 +201,24 @@
 
             const reader = new FileReader();
             reader.onload = function(event) {
-                const newPost = {
-                    author,
-                    title,
-                    content,
-                    image: event.target.result // 이미지를 텍스트 데이터(DataURL) 형태로 저장
-                };
-
-                posts.push(newPost);
-                localStorage.setItem('mychelin_posts', JSON.stringify(posts));
-                renderBubbles();
-                closeModal('writeModal');
+                db.collection("posts").add({
+                    author: author,
+                    title: title,
+                    content: content,
+                    image: event.target.result,
+                    createdAt: new Date()
+                }).then(() => {
+                    submitBtn.innerText = "등록하기";
+                    submitBtn.disabled = false;
+                    closeModal('writeModal');
+                }).catch((error) => {
+                    alert("업로드 실패: ", error);
+                    submitBtn.disabled = false;
+                });
             };
             reader.readAsDataURL(imageFile);
         }
 
-        // 상세보기 및 삭제 매핑 함수
         function showDetail(index) {
             const post = posts[index];
             document.getElementById('detailImg').src = post.image;
@@ -337,27 +226,20 @@
             document.getElementById('detailAuthor').innerText = `작성자: ${post.author}`;
             document.getElementById('detailContent').innerText = post.content;
 
-            // 삭제 버튼에 해당 인덱스 삭제 기능 부여
-            document.getElementById('deleteBtn').onclick = () => deletePost(index);
-
+            document.getElementById('deleteBtn').onclick = () => deletePost(post.id);
             openModal('detailModal');
         }
 
-        // 삭제 기능 함수
-        function deletePost(index) {
-            if(confirm("이 맛집 게시글을 정말 삭제하시겠습니까?")) {
-                posts.splice(index, 1);
-                localStorage.setItem('mychelin_posts', JSON.stringify(posts));
-                renderBubbles();
-                closeModal('detailModal');
+        // 구글 서버에서 글 삭제하기
+        function deletePost(id) {
+            if(confirm("이 맛집 게시글을 정말 삭제하시겠습니까?\n삭제하면 다른 사람 화면에서도 즉시 사라집니다.")) {
+                db.collection("posts").doc(id).delete().then(() => {
+                    closeModal('detailModal');
+                });
             }
         }
 
-        // 창 크기가 바뀔 때 버블 재배치
         window.addEventListener('resize', renderBubbles);
-
-        // 처음 사이트 로드 시 버블 그리기
-        window.onload = renderBubbles;
     </script>
 </body>
 </html>
