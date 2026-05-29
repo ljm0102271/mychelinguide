@@ -19,7 +19,15 @@
             box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: background-color 0.2s;
         }
         .write-btn:hover { background-color: #303F9F; }
-        #bubble-container { position: relative; width: 100%; height: calc(100vh - 100px); box-sizing: border-box; }
+        /* 버블 컨테이너 - 세로로 무한히 확장 가능하도록 수정 */
+        #bubble-container { 
+            position: relative; 
+            width: 100%; 
+            min-height: calc(100vh - 100px); 
+            height: auto; /* 고정 높이를 해제하여 내용물에 따라 늘어나게 함 */
+            box-sizing: border-box;
+            padding-bottom: 80px; /* 맨 아래 버블과 하단 여백 보호 */
+        }
         .bubble-item {
             position: absolute; display: flex; flex-direction: column; align-items: center;
             cursor: pointer; transition: transform 0.2s; animation: float 4s ease-in-out infinite alternate;
@@ -145,22 +153,23 @@ const firebaseConfig = {
             console.error("데이터 가져오기 실패:", error);
         });
 
-// 화면 크기에 맞춰 버블들을 '겹치지 않게' 바둑판 격자 형태로 배치하는 함수
+// 4-50개 이상의 무한 스크롤 및 완벽 겹침 방지 렌더링 함수
         function renderBubbles() {
             const container = document.getElementById('bubble-container');
             container.innerHTML = '';
-
-            const containerWidth = container.clientWidth;
-            const containerHeight = container.clientHeight;
-
-            // 1단계: 모바일 화면 크기에 맞춰 가상 격자(바둑판) 만들기
-            const cellWidth = 100;  // 버블 하나가 차지할 가로 구역 (85px 버블보다 조금 크게)
-            const cellHeight = 130; // 버블 하나가 차지할 세로 구역 (학번 이름 포함)
-
-            const cols = Math.floor(containerWidth / cellWidth);
-            const rows = Math.floor(containerHeight / cellHeight);
             
-            // 데이터를 넣을 가능한 모든 격자 칸의 좌표들을 리스트로 뽑기
+            const containerWidth = container.clientWidth;
+            const cellWidth = 100; 
+            const cellHeight = 130; 
+            const cols = Math.floor(containerWidth / cellWidth) || 3;
+
+            // 총 게시물 수에 맞춰 필요한 행(Rows)을 계산하여 세로 격자를 자동으로 무한 확장
+            const totalItems = posts.length;
+            const rows = Math.ceil(totalItems / cols) + 2; // 여유 공간 확보
+
+            // 컨테이너 전체 높이를 격자 크기에 맞춰 강제로 늘려주어 스크롤바가 생기게 함
+            container.style.height = `${rows * cellHeight}px`;
+            
             let availableCells = [];
             for (let r = 0; r < rows; r++) {
                 for (let c = 0; c < cols; c++) {
@@ -168,33 +177,27 @@ const firebaseConfig = {
                 }
             }
 
-            // 칸이 부족할 경우를 대비해, 칸이 모자라면 격자를 다시 쪼개어 쓸 수 있도록 세팅
             posts.forEach((post, index) => {
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'bubble-item';
 
-                // 고유 ID를 기반으로 배치할 칸 선택하기 (언제나 고정된 위치를 갖도록)
                 let hash = 0;
                 for (let i = 0; i < post.id.length; i++) hash = post.id.charCodeAt(i) + ((hash << 5) - hash);
                 
-                // 남은 칸 중에서 하나를 수학적으로 매핑
+                // 수학적 매핑으로 절대 겹치지 않는 유일한 칸 선택
                 let cellIndex = Math.abs(hash) % (availableCells.length || 1);
                 let cell = availableCells[cellIndex] || { r: 0, c: 0 };
                 
-                // 선택된 칸은 리스트에서 제거해서 다음 버블과 절대 안 겹치게 함
                 if (availableCells.length > 0) {
                     availableCells.splice(cellIndex, 1);
-                } else {
-                    // 혹시 게시물이 너무 많아 칸이 다 차면 랜덤으로 배치
-                    cell = { r: Math.abs(hash) % rows, c: Math.abs(hash * 2) % cols };
                 }
 
-                // 해당 칸 내부에서 살짝의 자연스러운 흔들림(랜덤 오프셋) 주기
-                const offsetX = (hash % 15); 
-                const offsetY = ((hash >> 2) % 20);
+                // 칸 내부 미세 흔들림 효과
+                const offsetX = (hash % 12); 
+                const offsetY = ((hash >> 2) % 15);
 
-                const posX = cell.c * cellWidth + 10 + offsetX;
-                const posY = cell.r * cellHeight + 10 + offsetY;
+                const posX = cell.c * cellWidth + ((containerWidth - (cols * cellWidth)) / 2) + offsetX;
+                const posY = cell.r * cellHeight + 15 + offsetY;
                 
                 itemDiv.style.left = `${posX}px`;
                 itemDiv.style.top = `${posY}px`;
