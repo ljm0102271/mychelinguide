@@ -241,7 +241,7 @@ const firebaseConfig = {
             });
         }
 
-        // 이미지 압축 및 업로드 함수 (동일하게 유지하되, 업로드 완료 시 깔끔하게 처리)
+              // 화질을 대폭 개선한 이미지 압축 및 업로드 함수
         function savePost(e) {
             e.preventDefault();
             const submitBtn = document.getElementById('submitBtn');
@@ -263,7 +263,9 @@ const firebaseConfig = {
                     const canvas = document.createElement('canvas');
                     let width = img.width;
                     let height = img.height;
-                    const max_size = 400;
+                    
+                    // ★ 고화질 최적화: 가로세로 최대 1200px까지 허용 (글씨가 선명하게 보임)
+                    const max_size = 1200; 
 
                     if (width > height) {
                         if (width > max_size) { height *= max_size / width; width = max_size; }
@@ -275,7 +277,8 @@ const firebaseConfig = {
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
 
-                    const compressedDataURL = canvas.toDataURL('image/jpeg', 0.5);
+                    // ★ 고화질 최적화: 압축 품질을 85%로 올려 원본 디테일을 살림
+                    const compressedDataURL = canvas.toDataURL('image/jpeg', 0.85);
 
                     db.collection("posts").add({
                         author: author,
@@ -295,6 +298,7 @@ const firebaseConfig = {
             };
             reader.readAsDataURL(imageFile);
         }
+
 
         function showDetail(index) {
             const post = posts[index];
