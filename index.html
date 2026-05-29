@@ -53,7 +53,15 @@
         .btn-submit { background-color: #3F51B5; color: white; }
         .btn-close { background-color: #ECEFF1; color: #546E7A; }
         .btn-delete { background-color: #FF5252; color: white; margin-right: auto; }
-        .detail-img { width: 100%; max-height: 200px; object-fit: cover; border-radius: 8px; margin-bottom: 12px; }
+        /* 상세보기 모달 내부 이미지 스타일 수정 */
+.detail-img {
+    width: 100%;
+    max-height: 300px;     /* 사진이 너무 커서 화면을 덮지 않도록 최대 높이 조절 */
+    object-fit: contain;   /* ★ 핵심: 사진을 찌그러트리거나 자르지 않고 원본 비율 그대로 보여줌 */
+    background-color: #f0f0f0; /* 세로나 가로가 짧아 남는 공간을 깔끔한 회색으로 처리 */
+    border-radius: 8px;
+    margin-bottom: 12px;
+}
         .detail-title { font-size: 1.2rem; font-weight: bold; margin-bottom: 8px; }
         .detail-author { font-size: 0.85rem; color: #78909C; margin-bottom: 12px; border-bottom: 1px solid #ECEFF1; padding-bottom: 8px; }
         .detail-content { font-size: 0.95rem; color: #37474F; white-space: pre-wrap; line-height: 1.5; }
