@@ -59,7 +59,7 @@
         .detail-content { font-size: 0.95rem; color: #37474F; white-space: pre-wrap; line-height: 1.5; }
     </style>
 
-    <!-- 구글 Firebase 시스템 탑재 -->
+    <!-- 구글 Firebase 라이브러리 -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 </head>
@@ -116,18 +116,16 @@
     </div>
 
     <script>
-        // ★★★ [중요] 여기에 아까 구글 화면(2단계)에 뜬 본인의 설정값으로 덮어씌우세요! ★★★
+        // ★★★여기에 새로 만든 파이어베이스 설정을 넣어주세요!★★★
 const firebaseConfig = {
-  apiKey: "AIzaSyBYdqWntYfCuN7x1_ld-rDbJCnfMRAZkHE",
-  authDomain: "mychelinguide.firebaseapp.com",
-  projectId: "mychelinguide",
-  storageBucket: "mychelinguide.firebasestorage.app",
-  messagingSenderId: "551648819304",
-  appId: "1:551648819304:web:af76c1742ac779c70563dd",
-  measurementId: "G-FKLGJ899D7"
+  apiKey: "AIzaSyC6swyarCj33PWNxkZUfqE9U-Z3200udzo",
+  authDomain: "mychelin-14f24.firebaseapp.com",
+  projectId: "mychelin-14f24",
+  storageBucket: "mychelin-14f24.firebasestorage.app",
+  messagingSenderId: "671987526708",
+  appId: "1:671987526708:web:134d4749ec92d0f3832e61"
 };
 
-        // Firebase 초기화 및 연결
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
@@ -139,19 +137,17 @@ const firebaseConfig = {
             if(id === 'writeModal') document.getElementById('postForm').reset();
         }
 
-        // 구글 서버에서 실시간으로 데이터 가져오기 (누가 글 쓰면 새로고침 없이 바로 뜸)
-        db.collection("posts").onSnapshot((snapshot) => {
+        db.collection("posts").orderBy("createdAt", "desc").onSnapshot((snapshot) => {
             posts = [];
-            snapshot.forEach((doc) => {
-                posts.push({ id: doc.id, ...doc.data() });
-            });
+            snapshot.forEach((doc) => { posts.push({ id: doc.id, ...doc.data() }); });
             renderBubbles();
+        }, (error) => {
+            console.error("데이터 가져오기 실패:", error);
         });
 
         function renderBubbles() {
             const container = document.getElementById('bubble-container');
             container.innerHTML = '';
-
             const containerWidth = container.clientWidth;
             const containerHeight = container.clientHeight;
 
@@ -159,7 +155,6 @@ const firebaseConfig = {
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'bubble-item';
 
-                // 기기마다 같은 위치에 배치되도록 글 ID를 활용한 고정형 랜덤 위치 계산
                 let hash = 0;
                 for (let i = 0; i < post.id.length; i++) hash = post.id.charCodeAt(i) + ((hash << 5) - hash);
                 const posSeedX = Math.abs(Math.sin(hash)) * (containerWidth - 95) + 5;
@@ -179,17 +174,16 @@ const firebaseConfig = {
 
                 itemDiv.appendChild(bubble);
                 itemDiv.appendChild(info);
-
                 itemDiv.onclick = () => showDetail(index);
                 container.appendChild(itemDiv);
             });
         }
 
-        // 구글 서버에 글 저장하기
+        // 이미지 압축 알고리즘이 적용된 안전한 저장 함수
         function savePost(e) {
             e.preventDefault();
             const submitBtn = document.getElementById('submitBtn');
-            submitBtn.innerText = "업로드 중...";
+            submitBtn.innerText = "사진 압축 및 업로드 중...";
             submitBtn.disabled = true;
 
             const author = document.getElementById('author').value;
@@ -201,20 +195,42 @@ const firebaseConfig = {
 
             const reader = new FileReader();
             reader.onload = function(event) {
-                db.collection("posts").add({
-                    author: author,
-                    title: title,
-                    content: content,
-                    image: event.target.result,
-                    createdAt: new Date()
-                }).then(() => {
-                    submitBtn.innerText = "등록하기";
-                    submitBtn.disabled = false;
-                    closeModal('writeModal');
-                }).catch((error) => {
-                    alert("업로드 실패: ", error);
-                    submitBtn.disabled = false;
-                });
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+                    const max_size = 400; // 가로세로 최대 400px로 제한 (용량 초과 절대 안 남)
+
+                    if (width > height) {
+                        if (width > max_size) { height *= max_size / width; width = max_size; }
+                    } else {
+                        if (height > max_size) { width *= max_size / height; height = max_size; }
+                    }
+                    canvas.width = width; canvas.height = height;
+
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    // 용량을 원본의 50% 수준으로 초압축
+                    const compressedDataURL = canvas.toDataURL('image/jpeg', 0.5);
+
+                    db.collection("posts").add({
+                        author: author,
+                        title: title,
+                        content: content,
+                        image: compressedDataURL,
+                        createdAt: new Date()
+                    }).then(() => {
+                        submitBtn.innerText = "등록하기";
+                        submitBtn.disabled = false;
+                        closeModal('writeModal');
+                    }).catch((error) => {
+                        alert("업로드 실패: 구글 서버 설정(테스트 모드)을 다시 확인해 주세요. " + error.message);
+                        submitBtn.disabled = false;
+                    });
+                };
             };
             reader.readAsDataURL(imageFile);
         }
@@ -225,17 +241,13 @@ const firebaseConfig = {
             document.getElementById('detailTitle').innerText = post.title;
             document.getElementById('detailAuthor').innerText = `작성자: ${post.author}`;
             document.getElementById('detailContent').innerText = post.content;
-
             document.getElementById('deleteBtn').onclick = () => deletePost(post.id);
             openModal('detailModal');
         }
 
-        // 구글 서버에서 글 삭제하기
         function deletePost(id) {
-            if(confirm("이 맛집 게시글을 정말 삭제하시겠습니까?\n삭제하면 다른 사람 화면에서도 즉시 사라집니다.")) {
-                db.collection("posts").doc(id).delete().then(() => {
-                    closeModal('detailModal');
-                });
+            if(confirm("이 맛집 게시글을 정말 삭제하시겠습니까?")) {
+                db.collection("posts").doc(id).delete().then(() => { closeModal('detailModal'); });
             }
         }
 
