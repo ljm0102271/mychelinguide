@@ -145,23 +145,59 @@ const firebaseConfig = {
             console.error("데이터 가져오기 실패:", error);
         });
 
+// 화면 크기에 맞춰 버블들을 '겹치지 않게' 바둑판 격자 형태로 배치하는 함수
         function renderBubbles() {
             const container = document.getElementById('bubble-container');
             container.innerHTML = '';
+
             const containerWidth = container.clientWidth;
             const containerHeight = container.clientHeight;
 
+            // 1단계: 모바일 화면 크기에 맞춰 가상 격자(바둑판) 만들기
+            const cellWidth = 100;  // 버블 하나가 차지할 가로 구역 (85px 버블보다 조금 크게)
+            const cellHeight = 130; // 버블 하나가 차지할 세로 구역 (학번 이름 포함)
+
+            const cols = Math.floor(containerWidth / cellWidth);
+            const rows = Math.floor(containerHeight / cellHeight);
+            
+            // 데이터를 넣을 가능한 모든 격자 칸의 좌표들을 리스트로 뽑기
+            let availableCells = [];
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    availableCells.push({ r: r, c: c });
+                }
+            }
+
+            // 칸이 부족할 경우를 대비해, 칸이 모자라면 격자를 다시 쪼개어 쓸 수 있도록 세팅
             posts.forEach((post, index) => {
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'bubble-item';
 
+                // 고유 ID를 기반으로 배치할 칸 선택하기 (언제나 고정된 위치를 갖도록)
                 let hash = 0;
                 for (let i = 0; i < post.id.length; i++) hash = post.id.charCodeAt(i) + ((hash << 5) - hash);
-                const posSeedX = Math.abs(Math.sin(hash)) * (containerWidth - 95) + 5;
-                const posSeedY = Math.abs(Math.cos(hash)) * (containerHeight - 120) + 5;
                 
-                itemDiv.style.left = `${posSeedX}px`;
-                itemDiv.style.top = `${posSeedY}px`;
+                // 남은 칸 중에서 하나를 수학적으로 매핑
+                let cellIndex = Math.abs(hash) % (availableCells.length || 1);
+                let cell = availableCells[cellIndex] || { r: 0, c: 0 };
+                
+                // 선택된 칸은 리스트에서 제거해서 다음 버블과 절대 안 겹치게 함
+                if (availableCells.length > 0) {
+                    availableCells.splice(cellIndex, 1);
+                } else {
+                    // 혹시 게시물이 너무 많아 칸이 다 차면 랜덤으로 배치
+                    cell = { r: Math.abs(hash) % rows, c: Math.abs(hash * 2) % cols };
+                }
+
+                // 해당 칸 내부에서 살짝의 자연스러운 흔들림(랜덤 오프셋) 주기
+                const offsetX = (hash % 15); 
+                const offsetY = ((hash >> 2) % 20);
+
+                const posX = cell.c * cellWidth + 10 + offsetX;
+                const posY = cell.r * cellHeight + 10 + offsetY;
+                
+                itemDiv.style.left = `${posX}px`;
+                itemDiv.style.top = `${posY}px`;
                 itemDiv.style.animationDelay = `${(hash % 10) * 0.2}s`;
 
                 const bubble = document.createElement('div');
@@ -179,7 +215,7 @@ const firebaseConfig = {
             });
         }
 
-        // 이미지 압축 알고리즘이 적용된 안전한 저장 함수
+        // 이미지 압축 및 업로드 함수 (동일하게 유지하되, 업로드 완료 시 깔끔하게 처리)
         function savePost(e) {
             e.preventDefault();
             const submitBtn = document.getElementById('submitBtn');
@@ -201,7 +237,7 @@ const firebaseConfig = {
                     const canvas = document.createElement('canvas');
                     let width = img.width;
                     let height = img.height;
-                    const max_size = 400; // 가로세로 최대 400px로 제한 (용량 초과 절대 안 남)
+                    const max_size = 400;
 
                     if (width > height) {
                         if (width > max_size) { height *= max_size / width; width = max_size; }
@@ -213,7 +249,6 @@ const firebaseConfig = {
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
 
-                    // 용량을 원본의 50% 수준으로 초압축
                     const compressedDataURL = canvas.toDataURL('image/jpeg', 0.5);
 
                     db.collection("posts").add({
@@ -227,7 +262,7 @@ const firebaseConfig = {
                         submitBtn.disabled = false;
                         closeModal('writeModal');
                     }).catch((error) => {
-                        alert("업로드 실패: 구글 서버 설정(테스트 모드)을 다시 확인해 주세요. " + error.message);
+                        alert("업로드 실패: " + error.message);
                         submitBtn.disabled = false;
                     });
                 };
