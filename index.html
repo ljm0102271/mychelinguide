@@ -33,7 +33,7 @@
             position: relative; 
             width: 100%; 
             min-height: calc(100vh - 100px); 
-            height: 1200px; /* 물리 엔진 공간 확보를 위해 기본 가상 캔버스 높이 설정 */
+            height: 1200px; 
             box-sizing: border-box;
             padding-bottom: 80px; 
         }
@@ -41,7 +41,6 @@
             position: absolute; display: flex; flex-direction: column; align-items: center;
             cursor: grab; transition: transform 0.2s;
             user-select: none; -webkit-user-drag: none;
-            /* @keyframes float는 물리 엔진 위치 계산과 충돌하므로 제거하고 자바스크립트 내 무중력 모션으로 대체 */
         }
         .bubble-item:active { cursor: grabbing; }
         .bubble-item:hover { transform: scale(1.05); z-index: 10; }
@@ -101,7 +100,6 @@
         }
         .toggle-btn.active { background-color: #37474F; color: white; border-color: #37474F; }
 
-        /* 리스트 뷰 스타일 */
         .list-view-mode {
             display: flex; flex-direction: column; gap: 10px; padding: 10px 20px; box-sizing: border-box; height: auto !important;
         }
@@ -196,11 +194,11 @@
         const db = firebase.firestore();
 
         let posts = [];
-        let bubbleElements = []; // 물리 연산을 위해 가상 버블 데이터를 담아둘 배열
+        let bubbleElements = []; 
         let currentView = 'bubble'; 
         let animationFrameId = null;
 
-        const BUBBLE_RADIUS = 50; // 밀쳐내기 판정 반경 (가로세로 약 100px 기준)
+        const BUBBLE_RADIUS = 50; 
 
         function openModal(id) { 
             if (id === 'writeModal' && !document.getElementById('editPostId').value) {
@@ -224,25 +222,20 @@
             if(mode === 'bubble') {
                 document.getElementById('btnBubble').classList.add('active');
                 document.getElementById('btnList').classList.remove('active');
-                startPhysicsEngine(); // 버블 모드 켜지면 물리 연산 가동
+                startPhysicsEngine(); 
             } else {
                 document.getElementById('btnBubble').classList.remove('active');
                 document.getElementById('btnList').classList.add('active');
-                if(animationFrameId) cancelAnimationFrame(animationFrameId); // 리스트 뷰에선 연산 중지
+                if(animationFrameId) cancelAnimationFrame(animationFrameId); 
             }
             renderBubbles(); 
         }
 
-        // DB 실시간 감지 (Snapshot)
         db.collection("posts").orderBy("createdAt", "desc").onSnapshot((snapshot) => {
-            const container = document.getElementById('bubble-container');
-            
-            // 기존 데이터와 새 데이터를 비교하여 위치가 바뀐 요소나 신규 요소만 부분 업데이트
             let newPosts = [];
             snapshot.forEach((doc) => { newPosts.push({ id: doc.id, ...doc.data() }); });
             
             if (currentView === 'bubble') {
-                // 버블 뷰일 때는 물리 데이터 엔진 배열(bubbleElements)을 동기화
                 syncPhysicsData(newPosts);
             }
             posts = newPosts;
@@ -251,18 +244,14 @@
             console.error("데이터 가져오기 실패:", error);
         });
 
-        // 파이어베이스 데이터와 로컬 물리 엔진 연동 배열 동기화
         function syncPhysicsData(newPosts) {
             const containerWidth = document.getElementById('bubble-container').clientWidth || 500;
             
             bubbleElements = newPosts.map((post) => {
                 const existing = bubbleElements.find(b => b.id === post.id);
                 
-                // 이미 화면에 있던 버블인 경우
                 if (existing) {
-                    // 단, 내가 드래그하는 중이 아니고, 타인이 원격으로 위치를 수정해서 전송한 경우에만 좌표 동기화
                     if (!existing.isDragging) {
-                        // DB에 좌표 데이터가 존재하는 경우에만 대입
                         if(post.posX !== undefined) existing.x = post.posX;
                         if(post.posY !== undefined) existing.y = post.posY;
                     }
@@ -270,7 +259,6 @@
                     return existing;
                 }
                 
-                // 새로 생성되거나 DB에 좌표 기록이 아예 없는 버블 배치 로직 (초기값)
                 let initialX = post.posX;
                 let initialY = post.posY;
 
@@ -285,11 +273,12 @@
                     id: post.id,
                     x: initialX,
                     y: initialY,
-                    vx: 0, // x축 이동 가속도
-                    vy: 0, // y축 이동 가속도
+                    vx: 0, 
+                    vy: 0, 
                     isDragging: false,
                     domElement: null,
-                    postData: post
+                    postData: post,
+                    needsUpdate: false // [수정] 이동 후 DB 저장 대상 판별 플래그
                 };
             });
         }
@@ -328,16 +317,14 @@
                 return;
             }
 
-            // 버블 모드 렌더링
             container.className = '';
-            container.style.height = '1200px'; // 전체 영역 높이 고정
+            container.style.height = '1200px'; 
 
             bubbleElements.forEach((bData, index) => {
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'bubble-item';
                 itemDiv.id = "b-" + bData.id;
                 
-                // 물리 엔진에 담긴 좌표로 엘리먼트 배치
                 itemDiv.style.left = bData.x + "px";
                 itemDiv.style.top = bData.y + "px";
 
@@ -352,16 +339,14 @@
                 itemDiv.appendChild(bubble);
                 itemDiv.appendChild(info);
                 
-                bData.domElement = itemDiv; // 가상 물리 구조에 실제 DOM 연결
+                bData.domElement = itemDiv; 
                 makeElementDraggable(bData, index);
                 container.appendChild(itemDiv);
             });
 
-            // 물리 시뮬레이션 프레임 가동
             startPhysicsEngine();
         }
 
-        // Pure JS 2D 원형 물리 엔진 (충돌 구현부)
         function startPhysicsEngine() {
             if(animationFrameId) cancelAnimationFrame(animationFrameId);
 
@@ -372,53 +357,55 @@
                 const containerWidth = container.clientWidth;
                 const containerHeight = container.clientHeight;
 
-                // 1. 모든 버블 쌍 간의 거리 비교 후 충돌 처리 (서로 밀어내기)
+                // 1. 모든 버블 충돌 체크 연산
                 for (let i = 0; i < bubbleElements.length; i++) {
                     for (let j = i + 1; j < bubbleElements.length; j++) {
                         let b1 = bubbleElements[i];
                         let b2 = bubbleElements[j];
 
-                        // 두 버블 중심 사이의 거리 계산
                         let dx = b2.x - b1.x;
                         let dy = b2.y - b1.y;
                         let distance = Math.sqrt(dx * dx + dy * dy);
-                        let minDist = BUBBLE_RADIUS * 2; // 두 버블지름의 결합 두께 제한
+                        let minDist = BUBBLE_RADIUS * 2; 
 
                         if (distance < minDist) {
-                            // 겹친 경우 각도 산출 후 밀어내기 처리
-                            if (distance === 0) { dx = 1; dy = 0; distance = 1; } // 완전 겹침 방지 예외처리
+                            if (distance === 0) { dx = 1; dy = 0; distance = 1; } 
                             
                             let overlap = minDist - distance;
-                            let forceX = (dx / distance) * overlap * 0.15; // 밀려나는 강도 계수
+                            let forceX = (dx / distance) * overlap * 0.15; 
                             let forceY = (dy / distance) * overlap * 0.15;
 
-                            // 드래그 중이 아닌 대상만 밀치기 속도 유발
-                            if (!b1.isDragging) { b1.vx -= forceX; b1.vy -= forceY; }
-                            if (!b2.isDragging) { b2.vx += forceX; b2.vy += forceY; }
+                            if (!b1.isDragging) { b1.vx -= forceX; b1.vy -= forceY; b1.needsUpdate = true; }
+                            if (!b2.isDragging) { b2.vx += forceX; b2.vy += forceY; b2.needsUpdate = true; }
                         }
                     }
                 }
 
-                // 2. 가속도를 좌표에 반영하고 외벽 충돌 및 마찰력 저항 연산
+                // 2. 가속도 반영 및 벽 충돌 처리
                 bubbleElements.forEach(b => {
-                    if (b.isDragging) return; // 내가 마우스로 끄는 중엔 물리 법칙 프리패스
+                    if (b.isDragging) return; 
 
-                    // 무중력 가속도 반영 및 관성 마찰 저항력 부여 (0.92)
                     b.vx *= 0.92;
                     b.vy *= 0.92;
                     b.x += b.vx;
                     b.y += b.vy;
 
-                    // 화면 외벽(벽면) 충돌 반사 연산
-                    if (b.x < 10) { b.x = 10; b.vx *= -0.5; }
-                    if (b.x > containerWidth - 100) { b.x = containerWidth - 100; b.vx *= -0.5; }
-                    if (b.y < 10) { b.y = 10; b.vy *= -0.5; }
-                    if (b.y > containerHeight - 110) { b.y = containerHeight - 110; b.vy *= -0.5; }
+                    if (b.x < 10) { b.x = 10; b.vx *= -0.5; b.needsUpdate = true; }
+                    if (b.x > containerWidth - 100) { b.x = containerWidth - 100; b.vx *= -0.5; b.needsUpdate = true; }
+                    if (b.y < 10) { b.y = 10; b.vy *= -0.5; b.needsUpdate = true; }
+                    if (b.y > containerHeight - 110) { b.y = containerHeight - 110; b.vy *= -0.5; b.needsUpdate = true; }
 
-                    // 실시간 DOM 위치 갱신
                     if (b.domElement) {
                         b.domElement.style.left = b.x + "px";
                         b.domElement.style.top = b.y + "px";
+                    }
+
+                    // [★ 핵심 보정 패치] 움직임이 유발되었다가 이제 완전히 정지(속도가 0.05 미만)했는지 체크
+                    if (b.needsUpdate && Math.abs(b.vx) < 0.05 && Math.abs(b.vy) < 0.05) {
+                        b.vx = 0;
+                        b.vy = 0;
+                        b.needsUpdate = false; // 플래그를 꺼주고
+                        saveLocationToFirebase(b.id, b.x, b.y); // 밀려나서 멈춘 최종 위치를 서버에 보존!
                     }
                 });
 
@@ -427,7 +414,6 @@
             animationFrameId = requestAnimationFrame(updatePhysics);
         }
 
-        // 드래그 마우스 제어 및 실시간 DB 업데이트 연동
         function makeElementDraggable(bData, index) {
             const elmnt = bData.domElement;
             let lastX = 0, lastY = 0;
@@ -453,7 +439,7 @@
                     dragStarted = true;
                     bData.isDragging = true;
                     elmnt.classList.add("dragging");
-                }, 180); // 모바일은 0.18초 이상 꾹 누르면 잡힘
+                }, 180); 
             }, { passive: true });
 
             elmnt.addEventListener('touchmove', (e) => {
@@ -468,7 +454,6 @@
                 let deltaX = touch.clientX - lastX;
                 let deltaY = touch.clientY - lastY;
                 
-                // 마우스 속도 보존 (물리 튕김 효과용)
                 bData.vx = deltaX * 0.8;
                 bData.vy = deltaY * 0.8;
 
@@ -487,8 +472,7 @@
                 if (bData.isDragging) {
                     bData.isDragging = false;
                     elmnt.classList.remove("dragging");
-                    // [핵심] 이동 완료 시 파이어베이스 DB에 최종 위치 전송
-                    saveLocationToFirebase(bData.id, bData.x, bData.y);
+                    bData.needsUpdate = true; // 던져진 후 멈출 때 저장되도록 설정
                 }
                 if (!isMoved) showDetail(index);
             });
@@ -516,7 +500,6 @@
                 let deltaX = e.clientX - lastX;
                 let deltaY = e.clientY - lastY;
 
-                // 드래그 속도를 가속도 변수에 누적 (손을 놓았을 때 튕겨 나가는 관성 구현)
                 bData.vx = deltaX * 0.8;
                 bData.vy = deltaY * 0.8;
 
@@ -538,15 +521,13 @@
                 elmnt.classList.remove("dragging");
                 
                 if (isMoved) {
-                    // [핵심] 드래그를 끝마친 시점에 구글 서버로 현재 좌표 일괄 전송
-                    saveLocationToFirebase(bData.id, bData.x, bData.y);
+                    bData.needsUpdate = true; // 마우스를 놓고 관성 이동이 끝난 뒤 최종 저장유도
                 } else {
                     showDetail(index);
                 }
             }
         }
 
-        // Firebase에 최종 버블 위치 저장하는 함수
         function saveLocationToFirebase(postId, posX, posY) {
             db.collection("posts").doc(postId).update({
                 posX: posX,
@@ -612,7 +593,6 @@
                           .catch((error) => { alert("수정 실패: " + error.message); })
                           .finally(() => { submitBtn.disabled = false; });
                     } else {
-                        // 신규 글 등록 시 기본 무작위 좌표 부여용 계산 (물리 배열에서 재처리)
                         db.collection("posts").add({
                             author: author,
                             title: title,
