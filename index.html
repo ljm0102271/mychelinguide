@@ -16,11 +16,11 @@
         header { display: flex; justify-content: space-between; align-items: center; padding: 20px; box-sizing: border-box; }
         h1 { 
             margin: 0; 
-            font-family: 'Raleway', sans-serif; /* Raleway 폰트 적용 */
-            font-weight: 800;                  /* Extrabold 두께 */
-            font-size: 1.8rem;                 /* 눈에 잘 띄는 예쁜 크기 */
+            font-family: 'Raleway', sans-serif; 
+            font-weight: 800;                  
+            font-size: 1.8rem;                 
             color: #37474F; 
-            letter-spacing: -0.5px;            /* 글자 간격을 좁혀 로고처럼 세련되게 */
+            letter-spacing: -0.5px;            
         }
         .write-btn {
             background-color: #3F51B5; color: white; border: none; padding: 10px 18px;
@@ -29,24 +29,34 @@
         }
         .write-btn:hover { background-color: #303F9F; }
         
-        /* 버블 컨테이너 - 세로로 무한히 확장 가능하도록 수정 */
         #bubble-container { 
             position: relative; 
             width: 100%; 
             min-height: calc(100vh - 100px); 
-            height: auto; /* 고정 높이를 해제하여 내용물에 따라 늘어나게 함 */
+            height: auto; 
             box-sizing: border-box;
-            padding-bottom: 80px; /* 맨 아래 버블과 하단 여백 보호 */
+            padding-bottom: 80px; 
         }
         .bubble-item {
             position: absolute; display: flex; flex-direction: column; align-items: center;
-            cursor: pointer; transition: transform 0.2s; animation: float 4s ease-in-out infinite alternate;
+            cursor: grab; transition: transform 0.2s; animation: float 4s ease-in-out infinite alternate;
+            user-select: none; -webkit-user-drag: none; /* 드래그 시 텍스트 블록/이미지 깨짐 방지 */
         }
+        .bubble-item:active { cursor: grabbing; }
         .bubble-item:hover { transform: scale(1.05); z-index: 10; }
+        
+        /* [중요] 드래그 중일 때 애니메이션을 멈추고 반응 속도를 올리는 클래스 */
+        .bubble-item.dragging {
+            animation: none !important;
+            transition: none !important;
+            z-index: 1000 !important;
+        }
+
         .bubble {
             width: 85px; height: 85px; border-radius: 50%; background-size: cover; background-position: center;
             background-color: rgba(255, 255, 255, 0.5); border: 2px solid rgba(255, 255, 255, 0.6);
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08); backdrop-filter: blur(2px); overflow: hidden;
+            pointer-events: none; /* 버블 내부 요소가 마우스 이벤트를 방해하지 않도록 처리 */
         }
         .bubble.has-img { position: relative; }
         .bubble.has-img::after { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255, 255, 255, 0.25); }
@@ -54,6 +64,7 @@
             margin-top: 6px; font-size: 0.75rem; color: #455A64; background: rgba(255, 255, 255, 0.6);
             padding: 2px 8px; border-radius: 10px; text-align: center; max-width: 90px;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            pointer-events: none;
         }
         @keyframes float { 0% { transform: translateY(0px); } 100% { transform: translateY(-10px); } }
         
@@ -72,13 +83,12 @@
         .btn-submit { background-color: #3F51B5; color: white; }
         .btn-close { background-color: #ECEFF1; color: #546E7A; }
         .btn-delete { background-color: #FF5252; color: white; margin-right: auto; }
-        .btn-edit { background-color: #FFB300; color: white; } /* 수정 버튼 색상 (노란색 계열) */
+        .btn-edit { background-color: #FFB300; color: white; } 
         .detail-img { width: 100%; max-height: 300px; object-fit: contain; background-color: #f0f0f0; border-radius: 8px; margin-bottom: 12px; cursor: zoom-in; }
         .detail-title { font-size: 1.2rem; font-weight: bold; margin-bottom: 8px; }
         .detail-author { font-size: 0.85rem; color: #78909C; margin-bottom: 12px; border-bottom: 1px solid #ECEFF1; padding-bottom: 8px; }
         .detail-content { font-size: 0.95rem; color: #37474F; white-space: pre-wrap; line-height: 1.5; }
         
-        /* 사진 확대 모달 스타일 */
         .zoom-modal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(0,0,0,0.9); z-index: 200; justify-content: center; align-items: center;
@@ -86,7 +96,6 @@
         }
         .zoom-img { max-width: 95%; max-height: 95%; object-fit: contain; border-radius: 4px; }
 
-        /* 보기 방식 버튼 스타일 */
         .view-toggle-area { display: flex; gap: 6px; margin-left: 12px; }
         .toggle-btn {
             background-color: rgba(255,255,255,0.6); color: #37474F; border: 1px solid #CFD8DC;
@@ -95,7 +104,7 @@
         }
         .toggle-btn.active { background-color: #37474F; color: white; border-color: #37474F; }
 
-        /* 리스트 뷰 전용 스타일 */
+        /* 리스트 뷰 전용 스타일 (리스트 모드일 때는 드래그를 막아야 하므로 스타일 분리) */
         .list-view-mode {
             display: flex; flex-direction: column; gap: 10px; padding: 10px 20px; box-sizing: border-box;
         }
@@ -103,7 +112,7 @@
             position: static !important; transform: none !important; animation: none !important;
             flex-direction: row; justify-content: flex-start; align-items: center; width: 100%;
             background: rgba(255, 255, 255, 0.8); padding: 12px 16px; border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04); box-sizing: border-box; gap: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04); box-sizing: border-box; gap: 15px; cursor: pointer;
         }
         .list-view-mode .bubble-item:hover { background: rgba(255, 255, 255, 1); transform: translateY(-2px) !important; }
         .list-view-mode .bubble { width: 45px; height: 45px; border-radius: 8px; flex-shrink: 0; } 
@@ -134,7 +143,6 @@
             <h2 id="modalHeaderTitle">맛집 등록하기</h2>
             <form id="postForm" onsubmit="savePost(event)">
                 <input type="hidden" id="editPostId" value="">
-                
                 <div class="form-group">
                     <label>학번 이름</label>
                     <input type="text" id="author" placeholder="예: 10101 홍길동" required>
@@ -167,7 +175,8 @@
             <div id="detailContent" class="detail-content"></div>
             <div class="btn-area">
                 <button type="button" id="deleteBtn" class="btn btn-delete">삭제</button>
-                <button type="button" id="editBtn" class="btn btn-edit">수정</button> <button type="button" class="btn btn-close" onclick="closeModal('detailModal')">닫기</button>
+                <button type="button" id="editBtn" class="btn btn-edit">수정</button> 
+                <button type="button" class="btn btn-close" onclick="closeModal('detailModal')">닫기</button>
             </div> 
         </div>
     </div>
@@ -194,10 +203,9 @@
 
         function openModal(id) { 
             if (id === 'writeModal' && !document.getElementById('editPostId').value) {
-                // 일반 글쓰기 모드로 열릴 때 세팅 초기화
                 document.getElementById('modalHeaderTitle').innerText = "맛집 등록하기";
                 document.getElementById('submitBtn').innerText = "등록하기";
-                document.getElementById('image').required = true; // 새 글은 사진 필수
+                document.getElementById('image').required = true; 
             }
             document.getElementById(id).style.display = 'flex'; 
         }
@@ -206,7 +214,7 @@
             document.getElementById(id).style.display = 'none'; 
             if(id === 'writeModal') {
                 document.getElementById('postForm').reset();
-                document.getElementById('editPostId').value = ""; // 수정 ID 초기화
+                document.getElementById('editPostId').value = ""; 
             }
         }
 
@@ -316,27 +324,126 @@
 
                 itemDiv.appendChild(bubble);
                 itemDiv.appendChild(info);
-                itemDiv.onclick = () => showDetail(index);
+                
+                // [핵심 패치] 드래그 이벤트 추가 함수 호출
+                makeElementDraggable(itemDiv, index);
+
                 container.appendChild(itemDiv);
             });
         }
 
-        // 글 등록 및 글 수정 통합 처리 함수
+        // ★ 버블 드래그 구현 핵심 자바스크립트 함수 ★
+        function makeElementDraggable(elmnt, index) {
+            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+            let isMoved = false;      // 단순 클릭인지 진짜 드래그인지 판별하는 변수
+            let dragStarted = false;  // 드래그 활성화 여부
+            let touchTimer = null;    // 모바일 꾹 누르기 타이머
+
+            // 마우스 우클릭 기본 메뉴창 방지
+            elmnt.addEventListener('contextmenu', (e) => {
+                if (currentView === 'bubble') e.preventDefault();
+            });
+
+            // 1. PC 마우스 이벤트 바인딩
+            elmnt.onmousedown = dragMouseDown;
+
+            // 2. 모바일 터치 이벤트 바인딩
+            elmnt.addEventListener('touchstart', (e) => {
+                if (currentView !== 'bubble') return;
+                isMoved = false;
+                dragStarted = false;
+                const touch = e.touches[0];
+                pos3 = touch.clientX;
+                pos4 = touch.clientY;
+
+                // 모바일에서 0.2초 동안 꾹 누르고 있으면 드래그 모드 활성화 (스크롤 방해 최소화)
+                touchTimer = setTimeout(() => {
+                    dragStarted = true;
+                    elmnt.classList.add("dragging");
+                }, 200);
+            }, { passive: true });
+
+            elmnt.addEventListener('touchmove', (e) => {
+                if (!dragStarted) {
+                    clearTimeout(touchTimer);
+                    return; 
+                }
+                // 드래그 중에는 모바일 화면 전체가 스크롤되는 것을 막음
+                if(e.cancelable) e.preventDefault(); 
+                
+                isMoved = true;
+                const touch = e.touches[0];
+                pos1 = pos3 - touch.clientX;
+                pos2 = pos4 - touch.clientY;
+                pos3 = touch.clientX;
+                pos4 = touch.clientY;
+                
+                elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+                elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+            }, { passive: false });
+
+            elmnt.addEventListener('touchend', () => {
+                clearTimeout(touchTimer);
+                elmnt.classList.remove("dragging");
+                // 움직임이 전혀 없었다면 상세 모달 오픈
+                if (!isMoved) {
+                    showDetail(index);
+                }
+            });
+
+            function dragMouseDown(e) {
+                if (currentView !== 'bubble') return;
+                // 마우스 좌클릭(0) 또는 우클릭(2)일 때만 작동하도록 제한
+                if (e.button !== 0 && e.button !== 2) return;
+                
+                e.preventDefault();
+                isMoved = false;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                
+                elmnt.classList.add("dragging");
+                
+                document.onmouseup = closeDragElement;
+                document.onmousemove = elementDrag;
+            }
+
+            function elementDrag(e) {
+                e.preventDefault();
+                isMoved = true; // 마우스가 움직였으므로 드래그 상태로 전환
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                
+                elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+                elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+            }
+
+            function closeDragElement() {
+                document.onmouseup = null;
+                document.onmousemove = null;
+                elmnt.classList.remove("dragging");
+                
+                // 드래그하지 않고 단순 클릭만 했을 때 상세 보기 모달 오픈
+                if (!isMoved) {
+                    showDetail(index);
+                }
+            }
+        }
+
         function savePost(e) {
             e.preventDefault();
             const submitBtn = document.getElementById('submitBtn');
-            const editId = document.getElementById('editPostId').value; // 수정 모드 판별용 ID
+            const editId = document.getElementById('editPostId').value; 
 
             const author = document.getElementById('author').value;
             const title = document.getElementById('title').value;
             const content = document.getElementById('content').value;
             const imageFile = document.getElementById('image').files[0];
 
-            // 실행 시 버튼 비활성화 처리
             submitBtn.innerText = editId ? "게시글 수정 중..." : "사진 압축 및 업로드 중...";
             submitBtn.disabled = true;
 
-            // [수정 모드이면서 사진을 변경하지 않는 경우] -> 텍스트만 파이어베이스 업데이트
             if (editId && !imageFile) {
                 db.collection("posts").doc(editId).update({
                     author: author,
@@ -352,7 +459,6 @@
                 return;
             }
 
-            // [새 글 등록이거나 사진을 새롭게 변경한 수정 모드인 경우] -> 이미지 압축 후 업로드
             if (!imageFile && !editId) return;
 
             const reader = new FileReader();
@@ -379,7 +485,6 @@
                     const compressedDataURL = canvas.toDataURL('image/jpeg', 0.85);
 
                     if (editId) {
-                        // 사진 교체하는 수정 DB 반영
                         db.collection("posts").doc(editId).update({
                             author: author,
                             title: title,
@@ -389,7 +494,6 @@
                           .catch((error) => { alert("수정 실패: " + error.message); })
                           .finally(() => { submitBtn.disabled = false; });
                     } else {
-                        // 완전히 새로운 글 등록 DB 반영
                         db.collection("posts").add({
                             author: author,
                             title: title,
@@ -412,29 +516,25 @@
             document.getElementById('detailAuthor').innerText = `작성자: ${post.author}`;
             document.getElementById('detailContent').innerText = post.content;
             
-            // 버튼 이벤트들 바인딩
             document.getElementById('deleteBtn').onclick = () => deletePost(post.id);
-            document.getElementById('editBtn').onclick = () => editPost(index); // 수정 버튼 클릭 연결
+            document.getElementById('editBtn').onclick = () => editPost(index); 
             document.getElementById('detailImg').onclick = () => zoomImage(post.image);
             
             openModal('detailModal');
         }
 
-        // 수정 모드로 모달 폼을 열어주는 함수
         function editPost(index) {
             const post = posts[index];
-            closeModal('detailModal'); // 기존 상세창은 잠시 닫고
+            closeModal('detailModal'); 
             
-            // 글쓰기 인풋 폼에 기존 정보 세팅하기
             document.getElementById('editPostId').value = post.id;
             document.getElementById('author').value = post.author;
             document.getElementById('title').value = post.title;
             document.getElementById('content').value = post.content;
             
-            // 모달 인터페이스 이름 수정 모드로 변경
             document.getElementById('modalHeaderTitle').innerText = "맛집 정보 수정하기";
             document.getElementById('submitBtn').innerText = "수정 완료";
-            document.getElementById('image').required = false; // 수정할 때는 사진 첨부 안 해도 기존 사진 유지됨
+            document.getElementById('image').required = false; 
 
             openModal('writeModal');
         }
