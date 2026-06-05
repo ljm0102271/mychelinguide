@@ -251,7 +251,9 @@
                 const existing = bubbleElements.find(b => b.id === post.id);
                 
                 if (existing) {
-                    if (!existing.isDragging) {
+                    // [핵심 해결] 내가 드래그 중이거나, 연쇄 반응으로 물리 연산('needsUpdate')이 진행 중일 때는 
+                    // 서버 데이터가 로컬 좌표를 강제로 초기화하지 못하도록 완전 방어(Lock)
+                    if (!existing.isDragging && !existing.needsUpdate) {
                         if(post.posX !== undefined) existing.x = post.posX;
                         if(post.posY !== undefined) existing.y = post.posY;
                     }
@@ -278,7 +280,7 @@
                     isDragging: false,
                     domElement: null,
                     postData: post,
-                    needsUpdate: false // [수정] 이동 후 DB 저장 대상 판별 플래그
+                    needsUpdate: false 
                 };
             });
         }
@@ -400,12 +402,12 @@
                         b.domElement.style.top = b.y + "px";
                     }
 
-                    // [★ 핵심 보정 패치] 움직임이 유발되었다가 이제 완전히 정지(속도가 0.05 미만)했는지 체크
+                    // 속도가 거의 완전히 0에 도달하여 정지 상태가 되었을 때만 딱 한 번 서버로 보존 요청
                     if (b.needsUpdate && Math.abs(b.vx) < 0.05 && Math.abs(b.vy) < 0.05) {
                         b.vx = 0;
                         b.vy = 0;
-                        b.needsUpdate = false; // 플래그를 꺼주고
-                        saveLocationToFirebase(b.id, b.x, b.y); // 밀려나서 멈춘 최종 위치를 서버에 보존!
+                        b.needsUpdate = false; 
+                        saveLocationToFirebase(b.id, b.x, b.y); 
                     }
                 });
 
@@ -438,6 +440,7 @@
                 touchTimer = setTimeout(() => {
                     dragStarted = true;
                     bData.isDragging = true;
+                    bData.needsUpdate = true; // 드래그 시작 시점부터 서버 업데이트 락 작동
                     elmnt.classList.add("dragging");
                 }, 180); 
             }, { passive: true });
@@ -472,9 +475,12 @@
                 if (bData.isDragging) {
                     bData.isDragging = false;
                     elmnt.classList.remove("dragging");
-                    bData.needsUpdate = true; // 던져진 후 멈출 때 저장되도록 설정
+                    bData.needsUpdate = true; 
                 }
-                if (!isMoved) showDetail(index);
+                if (!isMoved) {
+                    bData.needsUpdate = false; // 움직임 없는 일반 클릭일 경우엔 락 해제
+                    showDetail(index);
+                }
             });
 
             function dragMouseDown(e) {
@@ -484,6 +490,7 @@
                 e.preventDefault();
                 isMoved = false;
                 bData.isDragging = true;
+                bData.needsUpdate = true; // 마우스 클릭 시작 시점부터 서버 업데이트 락 발동
                 elmnt.classList.add("dragging");
 
                 lastX = e.clientX;
@@ -521,8 +528,9 @@
                 elmnt.classList.remove("dragging");
                 
                 if (isMoved) {
-                    bData.needsUpdate = true; // 마우스를 놓고 관성 이동이 끝난 뒤 최종 저장유도
+                    bData.needsUpdate = true; 
                 } else {
+                    bData.needsUpdate = false; // 드래그가 아니면 즉시 락 오프
                     showDetail(index);
                 }
             }
