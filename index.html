@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>MYCHELIN GUIDE</title>
     <link href="https://fonts.googleapis.com/css2?family=Raleway:wght=800&display=swap" rel="stylesheet">
     
@@ -18,7 +18,7 @@
             margin: 0; 
             font-family: 'Raleway', sans-serif; 
             font-weight: 800;                  
-            font-size: 1.8rem;                 
+            font-size: 1.5rem;                 
             color: #37474F; 
             letter-spacing: -0.5px;            
         }
@@ -26,34 +26,37 @@
             background-color: #3F51B5; color: white; border: none; padding: 10px 18px;
             border-radius: 20px; font-size: 0.9rem; font-weight: bold; cursor: pointer;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: background-color 0.2s;
+            flex-shrink: 0;
         }
         .write-btn:hover { background-color: #303F9F; }
         
+        /* [★반응형 최적화] 기기 너비에 100% 맞춤, 모바일 스크롤 유발 방지 */
         #bubble-container { 
             position: relative; 
             width: 100%; 
+            max-width: 100vw;
             min-height: calc(100vh - 100px); 
-            height: 1200px; 
+            height: 800px; /* 모바일 고려하여 기본 세로 높이 최적화 */
             box-sizing: border-box;
-            padding-bottom: 80px; 
+            overflow: hidden;
         }
         .bubble-item {
             position: absolute; display: flex; flex-direction: column; align-items: center;
             cursor: grab; transition: transform 0.2s;
             user-select: none; -webkit-user-drag: none;
-            /* [★모바일 최적화] 브라우저 렌더링 범위를 격리하여 리플로우 차단 */
             contain: layout paint; 
+            touch-action: none; /* 모바일 브라우저 기본 스크롤 제스처와 충돌 방지 */
         }
         .bubble-item:active { cursor: grabbing; }
         .bubble-item:hover { transform: scale(1.05); z-index: 10; }
         
         .bubble-item.dragging {
             z-index: 1000 !important;
-            transition: none !important; /* 드래그 중 딜레이 제거 */
+            transition: none !important;
         }
 
         .bubble {
-            width: 85px; height: 85px; border-radius: 50%; background-size: cover; background-position: center;
+            width: 80px; height: 80px; border-radius: 50%; background-size: cover; background-position: center;
             background-color: rgba(255, 255, 255, 0.5); border: 2px solid rgba(255, 255, 255, 0.6);
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08); backdrop-filter: blur(2px); overflow: hidden;
             pointer-events: none; 
@@ -61,8 +64,8 @@
         .bubble.has-img { position: relative; }
         .bubble.has-img::after { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255, 255, 255, 0.25); }
         .bubble-info {
-            margin-top: 6px; font-size: 0.75rem; color: #455A64; background: rgba(255, 255, 255, 0.6);
-            padding: 2px 8px; border-radius: 10px; text-align: center; max-width: 90px;
+            margin-top: 6px; font-size: 0.72rem; color: #455A64; background: rgba(255, 255, 255, 0.6);
+            padding: 2px 8px; border-radius: 10px; text-align: center; max-width: 85px;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
             pointer-events: none;
         }
@@ -95,10 +98,10 @@
         }
         .zoom-img { max-width: 95%; max-height: 95%; object-fit: contain; border-radius: 4px; }
 
-        .view-toggle-area { display: flex; gap: 6px; margin-left: 12px; }
+        .view-toggle-area { display: flex; gap: 4px; margin-left: 10px; }
         .toggle-btn {
             background-color: rgba(255,255,255,0.6); color: #37474F; border: 1px solid #CFD8DC;
-            padding: 5px 12px; border-radius: 15px; font-size: 0.8rem; font-weight: bold; cursor: pointer;
+            padding: 4px 10px; border-radius: 15px; font-size: 0.75rem; font-weight: bold; cursor: pointer;
             transition: all 0.2s; line-height: 1;
         }
         .toggle-btn.active { background-color: #37474F; color: white; border-color: #37474F; }
@@ -116,6 +119,15 @@
         .list-view-mode .bubble { width: 45px; height: 45px; border-radius: 8px; flex-shrink: 0; } 
         .list-view-mode .bubble-info { margin-top: 0; max-width: none; font-weight: bold; font-size: 0.9rem; background: none; padding: 0; text-align: left; }
         .list-title-text { font-size: 0.85rem; color: #78909C; margin-left: auto; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 50%; }
+
+        @media (max-width: 600px) {
+            header { padding: 12px; }
+            h1 { font-size: 1.2rem; }
+            .write-btn { padding: 8px 14px; font-size: 0.8rem; }
+            #bubble-container { height: 650px; }
+            .bubble { width: 75px; height: 75px; }
+            .bubble-info { max-width: 80px; font-size: 0.7rem; }
+        }
     </style>
 
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -125,7 +137,7 @@
 
     <header>
         <h1 style="display: flex; align-items: center;">
-            MYCHELIN GUIDE🍽️
+            MYCHELIN🍽️
             <div class="view-toggle-area">
                 <button id="btnBubble" class="toggle-btn active" onclick="switchView('bubble')">버블</button>
                 <button id="btnList" class="toggle-btn" onclick="switchView('list')">리스트</button>
@@ -202,7 +214,11 @@
         let animationFrameId = null;
         let dbSaveTimeout = null; 
 
-        const BUBBLE_RADIUS = 50; 
+        // 기기 크기별 버블 크기 유동적 대응
+        let bubbleRadius = window.innerWidth < 600 ? 44 : 48; 
+        window.addEventListener('resize', () => {
+            bubbleRadius = window.innerWidth < 600 ? 44 : 48;
+        });
 
         function openModal(id) { 
             if (id === 'writeModal' && !document.getElementById('editPostId').value) {
@@ -249,15 +265,23 @@
         });
 
         function syncPhysicsData(newPosts) {
-            const containerWidth = document.getElementById('bubble-container').clientWidth || 500;
+            const containerWidth = document.getElementById('bubble-container').clientWidth || window.innerWidth;
+            const containerHeight = document.getElementById('bubble-container').clientHeight || 650;
             
             bubbleElements = newPosts.map((post) => {
                 const existing = bubbleElements.find(b => b.id === post.id);
                 
                 if (existing) {
                     if (!existing.isDragging && !existing.needsUpdate) {
-                        if(post.posX !== undefined) existing.x = post.posX;
-                        if(post.posY !== undefined) existing.y = post.posY;
+                        // [★반응형] PC에서 저장된 넓은 좌표가 모바일 너비를 넘어가면 모바일 화면 안으로 자동 보정
+                        let targetX = post.posX !== undefined ? post.posX : existing.x;
+                        let targetY = post.posY !== undefined ? post.posY : existing.y;
+                        
+                        if (targetX > containerWidth - 95) targetX = containerWidth - 95;
+                        if (targetY > containerHeight - 110) targetY = containerHeight - 110;
+
+                        existing.x = targetX;
+                        existing.y = targetY;
                     }
                     existing.postData = post;
                     return existing;
@@ -266,11 +290,12 @@
                 let initialX = post.posX;
                 let initialY = post.posY;
 
-                if (initialX === undefined || initialY === undefined) {
+                // 초기 배치 시 현재 기기 너비 안에서만 생성되도록 자동 제어
+                if (initialX === undefined || initialY === undefined || initialX > containerWidth - 95) {
                     let hash = 0;
                     for (let i = 0; i < post.id.length; i++) hash = post.id.charCodeAt(i) + ((hash << 5) - hash);
-                    initialX = (Math.abs(hash) % (containerWidth - 120)) + 20;
-                    initialY = (Math.abs(hash >> 3) % 400) + 100;
+                    initialX = (Math.abs(hash) % (containerWidth - 100)) + 10;
+                    initialY = (Math.abs(hash >> 3) % (containerHeight - 150)) + 50;
                 }
 
                 return {
@@ -322,7 +347,8 @@
             }
 
             container.className = '';
-            container.style.height = '1200px'; 
+            // 반응형 높이 부여
+            container.style.height = window.innerWidth < 600 ? '650px' : '800px'; 
 
             bubbleElements.forEach((bData, index) => {
                 const itemDiv = document.createElement('div');
@@ -358,11 +384,12 @@
                 const container = document.getElementById('bubble-container');
                 if(!container || currentView !== 'bubble') return;
 
+                // [★최적화] 기기 너비/높이를 유동적으로 가져와 실시간 벽 충돌 범위 설정
                 const containerWidth = container.clientWidth;
                 const containerHeight = container.clientHeight;
                 let anyoneMoving = false; 
 
-                // 1. 모든 버블 충돌 체크 연산
+                // 1. 원형 충돌 연산부
                 for (let i = 0; i < bubbleElements.length; i++) {
                     for (let j = i + 1; j < bubbleElements.length; j++) {
                         let b1 = bubbleElements[i];
@@ -371,7 +398,7 @@
                         let dx = b2.x - b1.x;
                         let dy = b2.y - b1.y;
                         let distance = Math.sqrt(dx * dx + dy * dy);
-                        let minDist = BUBBLE_RADIUS * 2; 
+                        let minDist = bubbleRadius * 2; 
 
                         if (distance < minDist) {
                             if (distance === 0) { dx = 1; dy = 0; distance = 1; } 
@@ -386,26 +413,28 @@
                     }
                 }
 
-                // 2. 가속도 반영 및 벽 충돌 처리
+                // 2. 가속도 가감 및 화면 가두기 연산
                 bubbleElements.forEach(b => {
                     if (b.isDragging) {
                         anyoneMoving = true;
                         return; 
                     }
 
-                    // [★최적화] 마찰력을 0.88로 조절하여 쓸데없이 길게 진동하는 모션을 단축 (배터리 및 CPU 절약)
-                    b.vx *= 0.88;
-                    b.vy *= 0.88;
+                    b.vx *= 0.85; // 물리 연산 마찰력 상향 조정으로 불필요한 연산 컷
+                    b.vy *= 0.85;
                     b.x += b.vx;
                     b.y += b.vy;
 
-                    if (b.x < 10) { b.x = 10; b.vx *= -0.5; b.needsUpdate = true; }
-                    if (b.x > containerWidth - 100) { b.x = containerWidth - 100; b.vx *= -0.5; b.needsUpdate = true; }
-                    if (b.y < 10) { b.y = 10; b.vy *= -0.5; b.needsUpdate = true; }
-                    if (b.y > containerHeight - 110) { b.y = containerHeight - 110; b.vy *= -0.5; b.needsUpdate = true; }
+                    // [★반응형] 현재 화면 너비 우측 마진을 유동적으로 계산 (PC/모바일 공용 가두기)
+                    const rightLimit = containerWidth - (window.innerWidth < 600 ? 85 : 95);
+                    const bottomLimit = containerHeight - (window.innerWidth < 600 ? 100 : 110);
 
-                    // [★최적화] 정지 임계값을 0.1로 높여 모바일 기기에서 불필요한 미세 연산 조기 종료
-                    if (b.needsUpdate && Math.abs(b.vx) < 0.1 && Math.abs(b.vy) < 0.1) {
+                    if (b.x < 5) { b.x = 5; b.vx *= -0.4; b.needsUpdate = true; }
+                    if (b.x > rightLimit) { b.x = rightLimit; b.vx *= -0.4; b.needsUpdate = true; }
+                    if (b.y < 5) { b.y = 5; b.vy *= -0.4; b.needsUpdate = true; }
+                    if (b.y > bottomLimit) { b.y = bottomLimit; b.vy *= -0.4; b.needsUpdate = true; }
+
+                    if (b.needsUpdate && Math.abs(b.vx) < 0.12 && Math.abs(b.vy) < 0.12) {
                         b.vx = 0; b.vy = 0;
                         b.needsUpdate = false;
                     }
@@ -463,7 +492,7 @@
 
             elmnt.onmousedown = dragMouseDown;
 
-            // [★모바일 최적화] 스크롤 간섭 예방 및 터치 즉시 반응을 위한 이벤트 리스너 분할 및 passive 튜닝
+            // 모바일 터치이벤트 최적화 연동
             elmnt.addEventListener('touchstart', (e) => {
                 if (currentView !== 'bubble') return;
                 isMoved = false;
@@ -477,7 +506,7 @@
                     bData.isDragging = true;
                     bData.needsUpdate = true; 
                     elmnt.classList.add("dragging");
-                }, 120); // 터치 딜레이 감축
+                }, 100); 
             }, { passive: true });
 
             elmnt.addEventListener('touchmove', (e) => {
@@ -485,7 +514,6 @@
                     clearTimeout(touchTimer);
                     return; 
                 }
-                if(e.cancelable) e.preventDefault(); 
                 isMoved = true;
                 
                 const touch = e.touches[0];
