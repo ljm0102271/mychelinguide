@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MYCHELIN GUIDE</title>
-    <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Raleway:wght=800&display=swap" rel="stylesheet">
     
     <style>
         body {
@@ -41,12 +41,15 @@
             position: absolute; display: flex; flex-direction: column; align-items: center;
             cursor: grab; transition: transform 0.2s;
             user-select: none; -webkit-user-drag: none;
+            /* [★모바일 최적화] 브라우저 렌더링 범위를 격리하여 리플로우 차단 */
+            contain: layout paint; 
         }
         .bubble-item:active { cursor: grabbing; }
         .bubble-item:hover { transform: scale(1.05); z-index: 10; }
         
         .bubble-item.dragging {
             z-index: 1000 !important;
+            transition: none !important; /* 드래그 중 딜레이 제거 */
         }
 
         .bubble {
@@ -326,7 +329,6 @@
                 itemDiv.className = 'bubble-item';
                 itemDiv.id = "b-" + bData.id;
                 
-                // 안정이 검증된 left, top 원상 복구
                 itemDiv.style.left = bData.x + "px";
                 itemDiv.style.top = bData.y + "px";
 
@@ -391,8 +393,9 @@
                         return; 
                     }
 
-                    b.vx *= 0.92;
-                    b.vy *= 0.92;
+                    // [★최적화] 마찰력을 0.88로 조절하여 쓸데없이 길게 진동하는 모션을 단축 (배터리 및 CPU 절약)
+                    b.vx *= 0.88;
+                    b.vy *= 0.88;
                     b.x += b.vx;
                     b.y += b.vy;
 
@@ -401,7 +404,8 @@
                     if (b.y < 10) { b.y = 10; b.vy *= -0.5; b.needsUpdate = true; }
                     if (b.y > containerHeight - 110) { b.y = containerHeight - 110; b.vy *= -0.5; b.needsUpdate = true; }
 
-                    if (b.needsUpdate && Math.abs(b.vx) < 0.05 && Math.abs(b.vy) < 0.05) {
+                    // [★최적화] 정지 임계값을 0.1로 높여 모바일 기기에서 불필요한 미세 연산 조기 종료
+                    if (b.needsUpdate && Math.abs(b.vx) < 0.1 && Math.abs(b.vy) < 0.1) {
                         b.vx = 0; b.vy = 0;
                         b.needsUpdate = false;
                     }
@@ -410,14 +414,12 @@
                         anyoneMoving = true;
                     }
 
-                    // 드래그 좌표계와 정확히 일치하는 left/top 렌더링으로 렉 완전 교정
                     if (b.domElement) {
                         b.domElement.style.left = b.x + "px";
                         b.domElement.style.top = b.y + "px";
                     }
                 });
 
-                // 연쇄 반응 종료 시 모아서 Firebase 단 한 번 전송 (네트워크 병목 제거)
                 if (!anyoneMoving) {
                     triggerDebouncedFirebaseSave();
                 }
@@ -461,6 +463,7 @@
 
             elmnt.onmousedown = dragMouseDown;
 
+            // [★모바일 최적화] 스크롤 간섭 예방 및 터치 즉시 반응을 위한 이벤트 리스너 분할 및 passive 튜닝
             elmnt.addEventListener('touchstart', (e) => {
                 if (currentView !== 'bubble') return;
                 isMoved = false;
@@ -474,7 +477,7 @@
                     bData.isDragging = true;
                     bData.needsUpdate = true; 
                     elmnt.classList.add("dragging");
-                }, 180); 
+                }, 120); // 터치 딜레이 감축
             }, { passive: true });
 
             elmnt.addEventListener('touchmove', (e) => {
@@ -489,8 +492,8 @@
                 let deltaX = touch.clientX - lastX;
                 let deltaY = touch.clientY - lastY;
                 
-                bData.vx = deltaX * 0.8;
-                bData.vy = deltaY * 0.8;
+                bData.vx = deltaX * 0.75;
+                bData.vy = deltaY * 0.75;
 
                 bData.x += deltaX;
                 bData.y += deltaY;
@@ -539,8 +542,8 @@
                 let deltaX = e.clientX - lastX;
                 let deltaY = e.clientY - lastY;
 
-                bData.vx = deltaX * 0.8;
-                bData.vy = deltaY * 0.8;
+                bData.vx = deltaX * 0.75;
+                bData.vy = deltaY * 0.75;
 
                 bData.x += deltaX;
                 bData.y += deltaY;
