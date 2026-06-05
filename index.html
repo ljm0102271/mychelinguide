@@ -72,4 +72,333 @@
         .btn-submit { background-color: #3F51B5; color: white; }
         .btn-close { background-color: #ECEFF1; color: #546E7A; }
         .btn-delete { background-color: #FF5252; color: white; margin-right: auto; }
-        .detail-img { width: 100%; max-height: 300px; object-fit: contain; background-color: #f0f0f0; border-radius:
+        .detail-img { width: 100%; max-height: 300px; object-fit: contain; background-color: #f0f0f0; border-radius: 8px; margin-bottom: 12px; cursor: zoom-in; }
+        .detail-title { font-size: 1.2rem; font-weight: bold; margin-bottom: 8px; }
+        .detail-author { font-size: 0.85rem; color: #78909C; margin-bottom: 12px; border-bottom: 1px solid #ECEFF1; padding-bottom: 8px; }
+        .detail-content { font-size: 0.95rem; color: #37474F; white-space: pre-wrap; line-height: 1.5; }
+        
+        /* 사진 확대 모달 스타일 */
+        .zoom-modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.9); z-index: 200; justify-content: center; align-items: center;
+            cursor: zoom-out;
+        }
+        .zoom-img { max-width: 95%; max-height: 95%; object-fit: contain; border-radius: 4px; }
+
+        /* 보기 방식 버튼 스타일 */
+        .view-toggle-area { display: flex; gap: 6px; margin-left: 12px; }
+        .toggle-btn {
+            background-color: rgba(255,255,255,0.6); color: #37474F; border: 1px solid #CFD8DC;
+            padding: 5px 12px; border-radius: 15px; font-size: 0.8rem; font-weight: bold; cursor: pointer;
+            transition: all 0.2s; line-height: 1;
+        }
+        .toggle-btn.active { background-color: #37474F; color: white; border-color: #37474F; }
+
+        /* 리스트 뷰 전용 스타일 */
+        .list-view-mode {
+            display: flex; flex-direction: column; gap: 10px; padding: 10px 20px; box-sizing: border-box;
+        }
+        .list-view-mode .bubble-item {
+            position: static !important; transform: none !important; animation: none !important;
+            flex-direction: row; justify-content: flex-start; align-items: center; width: 100%;
+            background: rgba(255, 255, 255, 0.8); padding: 12px 16px; border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04); box-sizing: border-box; gap: 15px;
+        }
+        .list-view-mode .bubble-item:hover { background: rgba(255, 255, 255, 1); transform: translateY(-2px) !important; }
+        .list-view-mode .bubble { width: 45px; height: 45px; border-radius: 8px; flex-shrink: 0; } 
+        .list-view-mode .bubble-info { margin-top: 0; max-width: none; font-weight: bold; font-size: 0.9rem; background: none; padding: 0; text-align: left; }
+        .list-title-text { font-size: 0.85rem; color: #78909C; margin-left: auto; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 50%; }
+    </style>
+
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+    <header>
+        <h1 style="display: flex; align-items: center;">
+            MYCHELIN GUIDE🍽️
+            <div class="view-toggle-area">
+                <button id="btnBubble" class="toggle-btn active" onclick="switchView('bubble')">버블</button>
+                <button id="btnList" class="toggle-btn" onclick="switchView('list')">리스트</button>
+            </div>
+        </h1>
+        <button class="write-btn" onclick="openModal('writeModal')">글쓰기</button>
+    </header>
+
+    <div id="bubble-container"></div>
+
+    <div id="writeModal" class="modal">
+        <div class="modal-content">
+            <h2>맛집 등록하기</h2>
+            <form id="postForm" onsubmit="savePost(event)">
+                <div class="form-group">
+                    <label>학번 이름</label>
+                    <input type="text" id="author" placeholder="예: 10101 홍길동" required>
+                </div>
+                <div class="form-group">
+                    <label>맛집 이름 (제목)</label>
+                    <input type="text" id="title" placeholder="어디에 있는 어떤 맛집인가요?" required>
+                </div>
+                <div class="form-group">
+                    <label>추천 이유 (내용)</label>
+                    <textarea id="content" placeholder="맛있는 메뉴나 꿀팁을 적어주세요!" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>맛집 사진</label>
+                    <input type="file" id="image" accept="image/*" required>
+                </div>
+                <div class="btn-area">
+                    <button type="button" class="btn btn-close" onclick="closeModal('writeModal')">취소</button>
+                    <button type="submit" class="btn btn-submit" id="submitBtn">등록하기</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="detailModal" class="modal">
+        <div class="modal-content">
+            <img id="detailImg" class="detail-img" src="" alt="맛집 사진">
+            <div id="detailTitle" class="detail-title"></div>
+            <div id="detailAuthor" class="detail-author"></div>
+            <div id="detailContent" class="detail-content"></div>
+            <div class="btn-area">
+                <button type="button" id="deleteBtn" class="btn btn-delete">삭제</button>
+                <button type="button" class="btn btn-close" onclick="closeModal('detailModal')">닫기</button>
+            </div> 
+        </div>
+    </div>
+
+    <div id="zoomModal" class="zoom-modal" onclick="closeZoom()">
+        <img id="zoomImg" class="zoom-img" src="" alt="확대 이미지">
+    </div>
+
+    <script>
+        // 파이어베이스 설정값 유지
+        const firebaseConfig = {
+          apiKey: "AIzaSyC6swyarCj33PWNxkZUfqE9U-Z3200udzo",
+          authDomain: "mychelin-14f24.firebaseapp.com",
+          projectId: "mychelin-14f24",
+          storageBucket: "mychelin-14f24.firebasestorage.app",
+          messagingSenderId: "671987526708",
+          appId: "1:671987526708:web:134d4749ec92d0f3832e61"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        let posts = [];
+        let currentView = 'bubble'; // 보기 모드 상태 변수 (기본값: 버블)
+
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeModal(id) { 
+            document.getElementById(id).style.display = 'none'; 
+            if(id === 'writeModal') document.getElementById('postForm').reset();
+        }
+
+        // 보기 방식 전환 스위치 함수
+        function switchView(mode) {
+            currentView = mode;
+            if(mode === 'bubble') {
+                document.getElementById('btnBubble').classList.add('active');
+                document.getElementById('btnList').classList.remove('active');
+            } else {
+                document.getElementById('btnBubble').classList.remove('active');
+                document.getElementById('btnList').classList.add('active');
+            }
+            renderBubbles(); // 바뀐 모드로 화면 다시 그리기
+        }
+
+        db.collection("posts").orderBy("createdAt", "desc").onSnapshot((snapshot) => {
+            posts = [];
+            snapshot.forEach((doc) => { posts.push({ id: doc.id, ...doc.data() }); });
+            renderBubbles();
+        }, (error) => {
+            console.error("데이터 가져오기 실패:", error);
+        });
+
+        // 통합 렌더링 함수 (버블 뷰 / 리스트 뷰)
+        function renderBubbles() {
+            const container = document.getElementById('bubble-container');
+            container.innerHTML = '';
+            
+            // [리스트 모드일 때 처리]
+            if (currentView === 'list') {
+                container.removeAttribute('style'); // 기존 버블 세로 고정높이 초기화
+                container.className = 'list-view-mode';
+                
+                posts.forEach((post, index) => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'bubble-item';
+                    
+                    const bubble = document.createElement('div');
+                    bubble.className = 'bubble has-img';
+                    bubble.style.backgroundImage = `url(${post.image})`;
+
+                    const info = document.createElement('div');
+                    info.className = 'bubble-info';
+                    info.innerText = post.author; // 학번 이름 표시
+
+                    const titleText = document.createElement('div');
+                    titleText.className = 'list-title-text';
+                    titleText.innerText = post.title; // 맛집 이름(제목)
+
+                    itemDiv.appendChild(bubble);
+                    itemDiv.appendChild(info);
+                    itemDiv.appendChild(titleText);
+                    
+                    itemDiv.onclick = () => showDetail(index);
+                    container.appendChild(itemDiv);
+                });
+                return;
+            }
+
+            // [기존 버블 모드일 때 처리]
+            container.className = '';
+            const containerWidth = container.clientWidth;
+            const cellWidth = 100; 
+            const cellHeight = 130; 
+            const cols = Math.floor(containerWidth / cellWidth) || 3;
+
+            const totalItems = posts.length;
+            const rows = Math.ceil(totalItems / cols) + 2;
+
+            container.style.height = `${rows * cellHeight}px`;
+            
+            let availableCells = [];
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    availableCells.push({ r: r, c: c });
+                }
+            }
+
+            posts.forEach((post, index) => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'bubble-item';
+
+                let hash = 0;
+                for (let i = 0; i < post.id.length; i++) hash = post.id.charCodeAt(i) + ((hash << 5) - hash);
+                
+                let cellIndex = Math.abs(hash) % (availableCells.length || 1);
+                let cell = availableCells[cellIndex] || { r: 0, c: 0 };
+                
+                if (availableCells.length > 0) {
+                    availableCells.splice(cellIndex, 1);
+                }
+
+                const offsetX = (hash % 12); 
+                const offsetY = ((hash >> 2) % 15);
+
+                const posX = cell.c * cellWidth + ((containerWidth - (cols * cellWidth)) / 2) + offsetX;
+                const posY = cell.r * cellHeight + 15 + offsetY;
+                
+                itemDiv.style.left = `${posX}px`;
+                itemDiv.style.top = `${posY}px`;
+                itemDiv.style.animationDelay = `${(hash % 10) * 0.2}s`;
+
+                const bubble = document.createElement('div');
+                bubble.className = 'bubble has-img';
+                bubble.style.backgroundImage = `url(${post.image})`;
+
+                const info = document.createElement('div');
+                info.className = 'bubble-info';
+                info.innerText = post.author;
+
+                itemDiv.appendChild(bubble);
+                itemDiv.appendChild(info);
+                itemDiv.onclick = () => showDetail(index);
+                container.appendChild(itemDiv);
+            });
+        }
+
+        // 화질을 대폭 개선한 이미지 압축 및 업로드 함수 (가로세로 최대 1200px, 품질 85%)
+        function savePost(e) {
+            e.preventDefault();
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.innerText = "사진 압축 및 업로드 중...";
+            submitBtn.disabled = true;
+
+            const author = document.getElementById('author').value;
+            const title = document.getElementById('title').value;
+            const content = document.getElementById('content').value;
+            const imageFile = document.getElementById('image').files[0];
+
+            if (!imageFile) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+                    
+                    const max_size = 1200; 
+
+                    if (width > height) {
+                        if (width > max_size) { height *= max_size / width; width = max_size; }
+                    } else {
+                        if (height > max_size) { width *= max_size / height; height = max_size; }
+                    }
+                    canvas.width = width; canvas.height = height;
+
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    const compressedDataURL = canvas.toDataURL('image/jpeg', 0.85);
+
+                    db.collection("posts").add({
+                        author: author,
+                        title: title,
+                        content: content,
+                        image: compressedDataURL,
+                        createdAt: new Date()
+                    }).then(() => {
+                        submitBtn.innerText = "등록하기";
+                        submitBtn.disabled = false;
+                        closeModal('writeModal');
+                    }).catch((error) => {
+                        alert("업로드 실패: " + error.message);
+                        submitBtn.disabled = false;
+                    });
+                };
+            };
+            reader.readAsDataURL(imageFile);
+        }
+
+        function showDetail(index) {
+            const post = posts[index];
+            document.getElementById('detailImg').src = post.image;
+            document.getElementById('detailTitle').innerText = post.title;
+            document.getElementById('detailAuthor').innerText = `작성자: ${post.author}`;
+            document.getElementById('detailContent').innerText = post.content;
+            document.getElementById('deleteBtn').onclick = () => deletePost(post.id);
+            
+            // 상세창의 사진을 누르면 확대 함수가 실행되도록 연결
+            document.getElementById('detailImg').onclick = () => zoomImage(post.image);
+            
+            openModal('detailModal');
+        }
+
+        function deletePost(id) {
+            if(confirm("이 맛집 게시글을 정말 삭제하시겠습니까?")) {
+                db.collection("posts").doc(id).delete().then(() => { closeModal('detailModal'); });
+            }
+        }
+
+        window.addEventListener('resize', renderBubbles);
+
+        // 사진 확대 함수
+        function zoomImage(imgSrc) {
+            document.getElementById('zoomImg').src = imgSrc;
+            document.getElementById('zoomModal').style.display = 'flex';
+        }
+
+        // 사진 축소(닫기) 함수
+        function closeZoom() {
+            document.getElementById('zoomModal').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
