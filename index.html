@@ -11,9 +11,14 @@
             margin: 0; padding: 0;
             background-color: #E3F2FD;
             font-family: 'Noto Sans KR', sans-serif;
-            min-height: 100vh; overflow-x: hidden; position: relative;
+            min-height: 100vh;
+            overflow-x: hidden; /* 가로 스크롤만 원천 차단 */
+            position: relative;
         }
-        header { display: flex; justify-content: space-between; align-items: center; padding: 20px; box-sizing: border-box; }
+        header { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 15px 20px; box-sizing: border-box; height: 70px;
+        }
         h1 { 
             margin: 0; 
             font-family: 'Raleway', sans-serif; 
@@ -30,14 +35,15 @@
         }
         .write-btn:hover { background-color: #303F9F; }
         
+        /* [★스크롤 최적화] 가로는 딱 맞추고, 세로는 데이터에 따라 부드럽게 스크롤 */
         #bubble-container { 
             position: relative; 
             width: 100%; 
             max-width: 100vw;
             box-sizing: border-box;
             overflow: hidden;
-            /* 버블이 늘어남에 따라 컨테이너 높이가 유연하게 조절되도록 설정 */
-            min-height: calc(100vh - 100px);
+            padding: 10px;
+            min-height: calc(100vh - 70px);
         }
         .bubble-item {
             position: absolute; display: flex; flex-direction: column; align-items: center;
@@ -48,17 +54,17 @@
         .bubble-item:hover { transform: scale(1.08); z-index: 10; }
 
         .bubble {
-            width: 80px; height: 80px; border-radius: 50%; background-size: cover; background-position: center;
+            width: 75px; height: 75px; border-radius: 50%; background-size: cover; background-position: center;
             background-color: rgba(255, 255, 255, 0.5); border: 2px solid rgba(255, 255, 255, 0.6);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08); backdrop-filter: blur(2px); overflow: hidden;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08); backdrop-filter: blur(2px); overflow: hidden;
             pointer-events: none; 
         }
         .bubble.has-img { position: relative; }
         .bubble.has-img::after { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255, 255, 255, 0.25); }
         
         .bubble-info {
-            margin-top: 6px; font-size: 0.72rem; color: #455A64; background: rgba(255, 255, 255, 0.6);
-            padding: 2px 8px; border-radius: 10px; text-align: center; max-width: 85px;
+            margin-top: 4px; font-size: 0.7rem; color: #455A64; background: rgba(255, 255, 255, 0.6);
+            padding: 1px 6px; border-radius: 10px; text-align: center; max-width: 80px;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
             pointer-events: none;
         }
@@ -100,7 +106,8 @@
         .toggle-btn.active { background-color: #37474F; color: white; border-color: #37474F; }
 
         .list-view-mode {
-            display: flex; flex-direction: column; gap: 10px; padding: 10px 20px; box-sizing: border-box; height: auto !important;
+            display: flex; flex-direction: column; gap: 10px; padding: 10px 20px; box-sizing: border-box; 
+            height: auto !important;
         }
         .list-view-mode .bubble-item {
             position: static !important; transform: none !important; 
@@ -114,11 +121,11 @@
         .list-title-text { font-size: 0.85rem; color: #78909C; margin-left: auto; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 50%; }
 
         @media (max-width: 600px) {
-            header { padding: 12px; }
-            h1 { font-size: 1.2rem; }
-            .write-btn { padding: 8px 14px; font-size: 0.8rem; }
-            .bubble { width: 75px; height: 75px; }
-            .bubble-info { max-width: 80px; font-size: 0.7rem; }
+            header { padding: 10px; height: 60px; }
+            h1 { font-size: 1.1rem; }
+            .write-btn { padding: 6px 12px; font-size: 0.78rem; }
+            .bubble { width: 68px; height: 68px; }
+            .bubble-info { max-width: 72px; font-size: 0.65rem; }
         }
     </style>
 
@@ -129,7 +136,7 @@
 
     <header>
         <h1 style="display: flex; align-items: center;">
-            MYCHELIN GUIDE by COZY
+            MYCHELIN🍽️
             <div class="view-toggle-area">
                 <button id="btnBubble" class="toggle-btn active" onclick="switchView('bubble')">버블</button>
                 <button id="btnList" class="toggle-btn" onclick="switchView('list')">리스트</button>
@@ -203,6 +210,10 @@
         let posts = [];
         let currentView = 'bubble'; 
 
+        window.addEventListener('resize', () => {
+            if (currentView === 'bubble') renderBubbles();
+        });
+
         function openModal(id) { 
             if (id === 'writeModal' && !document.getElementById('editPostId').value) {
                 document.getElementById('modalHeaderTitle').innerText = "맛집 등록하기";
@@ -232,7 +243,6 @@
             renderBubbles(); 
         }
 
-        // 실시간 DB 연동 및 겹침 없는 1회성 랜덤 분산 알고리즘
         db.collection("posts").orderBy("createdAt", "desc").onSnapshot((snapshot) => {
             posts = [];
             snapshot.forEach((doc) => { posts.push({ id: doc.id, ...doc.data() }); });
@@ -247,6 +257,7 @@
             
             if (currentView === 'list') {
                 container.className = 'list-view-mode';
+                container.removeAttribute('style');
                 posts.forEach((post, index) => {
                     const itemDiv = document.createElement('div');
                     itemDiv.className = 'bubble-item';
@@ -275,40 +286,43 @@
 
             container.className = '';
 
-            // [★무작위 비중첩 알고리즘]
             const containerWidth = container.clientWidth || window.innerWidth;
-            const bWidth = window.innerWidth < 600 ? 85 : 95;  // 버블 실제 가로 영역
-            const bHeight = window.innerWidth < 600 ? 105 : 115; // 버블 실제 세로 영역
+
+            // 디바이스별 버블이 오밀조밀하게 뭉치도록 유도하는 너비/높이
+            const isMobile = window.innerWidth < 600;
+            const bWidth = isMobile ? 78 : 88;  
+            const bHeight = isMobile ? 98 : 108; 
             
-            // 화면 너비에 맞춰 배치 가능한 최대 열(Column) 개수 계산
+            // 가로 화면에 들어갈 수 있는 열(Column) 개수
             const cols = Math.floor(containerWidth / bWidth) || 1;
             
-            // 수학적 해시(무작위 느낌) 순서 배열 생성
+            // 데이터 수에 맞춰 세로로 무한히 확장 가능한 촘촘한 가상 슬롯 생성
             let slots = [];
-            for (let i = 0; i < posts.length * 3; i++) { slots.push(i); }
+            for (let i = 0; i < posts.length * 2; i++) { slots.push(i); }
             
-            // 게시글 데이터별 고유 ID 기반 셔플을 통해 무작위성 부여 (새로고침해도 자기 자리 유지)
             posts.forEach((post, index) => {
                 let hash = 0;
                 for (let i = 0; i < post.id.length; i++) hash = post.id.charCodeAt(i) + ((hash << 5) - hash);
                 
-                // 슬롯 매칭을 통해 겹침을 원천 차단하면서 랜덤화
+                // 가용 슬롯 중 고유 해시 기반으로 무작위 매칭 (순서는 섞이되 겹침은 차단)
                 const slotIndex = Math.abs(hash) % slots.length;
                 const pickedSlot = slots.splice(slotIndex, 1)[0];
                 
                 const col = pickedSlot % cols;
                 const row = Math.floor(pickedSlot / cols);
                 
-                // 격자 베이스 위에 미세 랜덤 좌표(좌우/상하 흔들기)를 더해 바둑판 느낌을 완전히 지움
-                const randomOffsetX = (hash % 15); 
-                const randomOffsetY = ((hash >> 2) % 20);
+                // 버블 간 여백을 좁게(촘촘하게) 잡고, 바둑판 느낌을 지우는 미세 랜덤 오프셋(-5px ~ +5px) 부여
+                const randomOffsetX = (hash % 11) - 5; 
+                const randomOffsetY = ((hash >> 2) % 11) - 5;
 
-                let posX = col * bWidth + 10 + randomOffsetX;
-                let posY = row * bHeight + 20 + randomOffsetY;
+                // 좌우 여백 균등 분배 후 배치
+                let posX = col * bWidth + (containerWidth - (cols * bWidth)) / 2 + randomOffsetX;
+                let posY = row * bHeight + 15 + randomOffsetY;
 
-                // 화면 우측 삐져나감 최적화 방지
-                if (posX > containerWidth - bWidth) { posX = containerWidth - bWidth - 5; }
+                // 화면 양옆 탈출 방지 마진 수정
+                if (posX > containerWidth - bWidth) posX = containerWidth - bWidth - 5;
                 if (posX < 5) posX = 5;
+                if (posY < 5) posY = 5;
 
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'bubble-item';
@@ -330,16 +344,17 @@
                 container.appendChild(itemDiv);
             });
 
-            // 생성된 마지막 아이템의 위치를 파악하여 컨테이너 높이 유동적 자동 지정 (스크롤 확보)
+            // 가장 마지막에 가 있는 세로축 버블을 계산하여 컨테이너 높이를 늘려줌 (세로 스크롤 확보)
             const items = container.getElementsByClassName('bubble-item');
-            let maxHeight = 600;
+            let maxHeight = window.innerHeight - 70;
             for (let i = 0; i < items.length; i++) {
-                let topVal = parseInt(items[i].style.top) + bHeight + 50;
+                let topVal = parseInt(items[i].style.top) + bHeight + 60;
                 if (topVal > maxHeight) maxHeight = topVal;
             }
             container.style.height = maxHeight + "px";
         }
 
+        // [이하 기존과 동일한 Firebase CRUD 및 이미지 압축 코드]
         function savePost(e) {
             e.preventDefault();
             const submitBtn = document.getElementById('submitBtn');
