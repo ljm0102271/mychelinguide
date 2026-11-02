@@ -4,90 +4,123 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>MYCHELIN GUIDE</title>
-    <link href="https://fonts.googleapis.com/css2?family=Raleway:wght=800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@800&display=swap" rel="stylesheet">
     
     <style>
+        @font-face {
+            font-family: 'Paperlogy-5Medium';
+            src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/2408-1@1.0/Paperlogy-5Medium.woff2') format('woff2');
+            font-weight: 500;
+            font-style: normal;
+        }
+
         body {
             margin: 0; padding: 0;
             background-color: #E3F2FD;
             font-family: 'Noto Sans KR', sans-serif;
             min-height: 100vh;
-            overflow-x: hidden; /* 가로 스크롤만 원천 차단 */
+            overflow-x: hidden;
             position: relative;
         }
+
         header { 
             display: flex; justify-content: space-between; align-items: center; 
-            padding: 15px 20px; box-sizing: border-box; height: 70px;
+            padding: 15px 25px; box-sizing: border-box; height: 75px;
+            background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(8px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.6);
+            position: sticky; top: 0; z-index: 50;
         }
+
         h1 { 
             margin: 0; 
-            font-family: 'Raleway', sans-serif; 
-            font-weight: 800;                  
-            font-size: 1.5rem;                 
+            font-family: 'Paperlogy-5Medium', sans-serif; 
+            font-weight: 500;                    
+            font-size: 1.5rem;                    
             color: #37474F; 
-            letter-spacing: -0.5px;            
+            letter-spacing: -0.5px;    
+            display: flex;
+            align-items: center;
+            gap: 15px;
         }
+
         .write-btn {
             background-color: #3F51B5; color: white; border: none; padding: 10px 18px;
             border-radius: 20px; font-size: 0.9rem; font-weight: bold; cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: background-color 0.2s;
-            flex-shrink: 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: all 0.2s;
         }
-        .write-btn:hover { background-color: #303F9F; }
+        .write-btn:hover { background-color: #303F9F; transform: translateY(-1px); }
         
-        /* [★스크롤 최적화] 가로는 딱 맞추고, 세로는 데이터에 따라 부드럽게 스크롤 */
+        /* 버블 컨테이너 영역 */
         #bubble-container { 
             position: relative; 
             width: 100%; 
             max-width: 100vw;
             box-sizing: border-box;
-            overflow: hidden;
-            padding: 10px;
-            min-height: calc(100vh - 70px);
+            padding: 20px;
+            min-height: calc(100vh - 75px);
         }
+
         .bubble-item {
-            position: absolute; display: flex; flex-direction: column; align-items: center;
-            cursor: pointer; transition: transform 0.2s;
-            user-select: none; -webkit-user-drag: none;
-            contain: layout paint; 
+            position: absolute; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center;
+            cursor: pointer; 
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            user-select: none; 
+            -webkit-user-drag: none;
+            touch-action: manipulation;
         }
-        .bubble-item:hover { transform: scale(1.08); z-index: 10; }
+        .bubble-item:hover { transform: scale(1.12); z-index: 10; }
 
         .bubble {
-            width: 75px; height: 75px; border-radius: 50%; background-size: cover; background-position: center;
-            background-color: rgba(255, 255, 255, 0.5); border: 2px solid rgba(255, 255, 255, 0.6);
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08); backdrop-filter: blur(2px); overflow: hidden;
-            pointer-events: none; 
+            width: 85px; height: 85px; border-radius: 50%; 
+            background-size: cover; background-position: center;
+            background-color: rgba(255, 255, 255, 0.7); 
+            border: 3px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12); 
+            overflow: hidden;
+            position: relative;
         }
-        .bubble.has-img { position: relative; }
-        .bubble.has-img::after { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255, 255, 255, 0.25); }
         
         .bubble-info {
-            margin-top: 4px; font-size: 0.7rem; color: #455A64; background: rgba(255, 255, 255, 0.6);
-            padding: 1px 6px; border-radius: 10px; text-align: center; max-width: 80px;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-            pointer-events: none;
+            margin-top: 6px; 
+            font-size: 0.75rem; 
+            color: #37474F; 
+            background: rgba(255, 255, 255, 0.85);
+            padding: 2px 8px; 
+            border-radius: 12px; 
+            text-align: center; 
+            max-width: 95px;
+            white-space: nowrap; 
+            overflow: hidden; 
+            text-overflow: ellipsis;
+            font-weight: 600;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
         
         .modal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(0,0,0,0.5); z-index: 100; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;
+            backdrop-filter: blur(4px);
         }
-        .modal-content { background-color: white; padding: 20px; border-radius: 16px; width: 100%; max-width: 400px; box-sizing: border-box; max-height: 90vh; overflow-y: auto; }
-        .modal h2 { margin-top: 0; font-size: 1.3rem; color: #37474F; }
-        .form-group { margin-bottom: 12px; }
-        .form-group label { display: block; font-size: 0.85rem; color: #546E7A; margin-bottom: 4px; }
-        .form-group input, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 8px; box-sizing: border-box; font-size: 0.95rem; }
+        .modal-content { background-color: white; padding: 24px; border-radius: 20px; width: 100%; max-width: 400px; box-sizing: border-box; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
+        .modal h2 { margin-top: 0; font-size: 1.3rem; color: #37474F; font-family: 'Paperlogy-5Medium', sans-serif; }
+        .form-group { margin-bottom: 14px; }
+        .form-group label { display: block; font-size: 0.85rem; color: #546E7A; margin-bottom: 5px; font-weight: bold; }
+        .form-group input, .form-group textarea { width: 100%; padding: 11px; border: 1px solid #CFD8DC; border-radius: 10px; box-sizing: border-box; font-size: 0.95rem; outline: none; }
+        .form-group input:focus, .form-group textarea:focus { border-color: #3F51B5; }
         .form-group textarea { height: 100px; resize: none; }
         .btn-area { display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px; }
-        .btn { padding: 10px 16px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; }
+        .btn { padding: 10px 16px; border-radius: 10px; border: none; cursor: pointer; font-weight: bold; }
         .btn-submit { background-color: #3F51B5; color: white; }
         .btn-close { background-color: #ECEFF1; color: #546E7A; }
         .btn-delete { background-color: #FF5252; color: white; margin-right: auto; }
         .btn-edit { background-color: #FFB300; color: white; } 
-        .detail-img { width: 100%; max-height: 300px; object-fit: contain; background-color: #f0f0f0; border-radius: 8px; margin-bottom: 12px; cursor: zoom-in; }
-        .detail-title { font-size: 1.2rem; font-weight: bold; margin-bottom: 8px; }
-        .detail-author { font-size: 0.85rem; color: #78909C; margin-bottom: 12px; border-bottom: 1px solid #ECEFF1; padding-bottom: 8px; }
+        
+        .detail-img { width: 100%; max-height: 280px; object-fit: contain; background-color: #f8fafc; border-radius: 12px; margin-bottom: 12px; cursor: zoom-in; }
+        .detail-title { font-size: 1.25rem; font-weight: bold; color: #37474F; margin-bottom: 6px; }
+        .detail-author { font-size: 0.85rem; color: #78909C; margin-bottom: 12px; border-bottom: 1px solid #ECEFF1; padding-bottom: 8px; font-weight: 500; }
         .detail-content { font-size: 0.95rem; color: #37474F; white-space: pre-wrap; line-height: 1.5; }
         
         .zoom-modal {
@@ -95,37 +128,16 @@
             background-color: rgba(0,0,0,0.9); z-index: 200; justify-content: center; align-items: center;
             cursor: zoom-out;
         }
-        .zoom-img { max-width: 95%; max-height: 95%; object-fit: contain; border-radius: 4px; }
+        .zoom-img { max-width: 95%; max-height: 95%; object-fit: contain; border-radius: 8px; }
 
-        .view-toggle-area { display: flex; gap: 4px; margin-left: 10px; }
-        .toggle-btn {
-            background-color: rgba(255,255,255,0.6); color: #37474F; border: 1px solid #CFD8DC;
-            padding: 4px 10px; border-radius: 15px; font-size: 0.75rem; font-weight: bold; cursor: pointer;
-            transition: all 0.2s; line-height: 1;
-        }
-        .toggle-btn.active { background-color: #37474F; color: white; border-color: #37474F; }
-
-        .list-view-mode {
-            display: flex; flex-direction: column; gap: 10px; padding: 10px 20px; box-sizing: border-box; 
-            height: auto !important;
-        }
-        .list-view-mode .bubble-item {
-            position: static !important; transform: none !important; 
-            flex-direction: row; justify-content: flex-start; align-items: center; width: 100%;
-            background: rgba(255, 255, 255, 0.8); padding: 12px 16px; border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04); box-sizing: border-box; gap: 15px; cursor: pointer;
-        }
-        .list-view-mode .bubble-item:hover { background: rgba(255, 255, 255, 1); transform: translateY(-2px) !important; }
-        .list-view-mode .bubble { width: 45px; height: 45px; border-radius: 8px; flex-shrink: 0; } 
-        .list-view-mode .bubble-info { margin-top: 0; max-width: none; font-weight: bold; font-size: 0.9rem; background: none; padding: 0; text-align: left; }
-        .list-title-text { font-size: 0.85rem; color: #78909C; margin-left: auto; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 50%; }
+        .view-toggle-area { display: none; }
 
         @media (max-width: 600px) {
-            header { padding: 10px; height: 60px; }
-            h1 { font-size: 1.1rem; }
-            .write-btn { padding: 6px 12px; font-size: 0.78rem; }
-            .bubble { width: 68px; height: 68px; }
-            .bubble-info { max-width: 72px; font-size: 0.65rem; }
+            header { padding: 10px 15px; height: 65px; }
+            h1 { font-size: 1.2rem; }
+            .write-btn { padding: 7px 14px; font-size: 0.8rem; }
+            .bubble { width: 75px; height: 75px; }
+            .bubble-info { max-width: 82px; font-size: 0.7rem; }
         }
     </style>
 
@@ -135,14 +147,14 @@
 <body>
 
     <header>
-        <h1 style="display: flex; align-items: center;">
+        <h1>
             MYCHELIN🍽️
             <div class="view-toggle-area">
                 <button id="btnBubble" class="toggle-btn active" onclick="switchView('bubble')">버블</button>
                 <button id="btnList" class="toggle-btn" onclick="switchView('list')">리스트</button>
             </div>
         </h1>
-        <button class="write-btn" onclick="openModal('writeModal')">글쓰기</button>
+        <button class="write-btn" onclick="openModal('writeModal')">맛집 등록하기</button>
     </header>
 
     <div id="bubble-container"></div>
@@ -233,13 +245,6 @@
 
         function switchView(mode) {
             currentView = mode;
-            if(mode === 'bubble') {
-                document.getElementById('btnBubble').classList.add('active');
-                document.getElementById('btnList').classList.remove('active');
-            } else {
-                document.getElementById('btnBubble').classList.remove('active');
-                document.getElementById('btnList').classList.add('active');
-            }
             renderBubbles(); 
         }
 
@@ -251,78 +256,41 @@
             console.error("데이터 가져오기 실패:", error);
         });
 
+        // 겹치지 않고 적당한 간격으로 정돈된 버블 배치 로직
         function renderBubbles() {
             const container = document.getElementById('bubble-container');
             container.innerHTML = '';
             
-            if (currentView === 'list') {
-                container.className = 'list-view-mode';
-                container.removeAttribute('style');
-                posts.forEach((post, index) => {
-                    const itemDiv = document.createElement('div');
-                    itemDiv.className = 'bubble-item';
-                    
-                    const bubble = document.createElement('div');
-                    bubble.className = 'bubble has-img';
-                    bubble.style.backgroundImage = `url(${post.image})`;
-
-                    const info = document.createElement('div');
-                    info.className = 'bubble-info';
-                    info.innerText = post.author; 
-
-                    const titleText = document.createElement('div');
-                    titleText.className = 'list-title-text';
-                    titleText.innerText = post.title; 
-
-                    itemDiv.appendChild(bubble);
-                    itemDiv.appendChild(info);
-                    itemDiv.appendChild(titleText);
-                    
-                    itemDiv.onclick = () => showDetail(index);
-                    container.appendChild(itemDiv);
-                });
-                return;
-            }
-
-            container.className = '';
-
             const containerWidth = container.clientWidth || window.innerWidth;
-
-            // 디바이스별 버블이 오밀조밀하게 뭉치도록 유도하는 너비/높이
             const isMobile = window.innerWidth < 600;
-            const bWidth = isMobile ? 78 : 88;  
-            const bHeight = isMobile ? 98 : 108; 
+
+            // 버블 하나의 차지하는 가로/세로 간격 여유 있게 설정
+            const cellWidth = isMobile ? 105 : 125;
+            const cellHeight = isMobile ? 120 : 140;
             
-            // 가로 화면에 들어갈 수 있는 열(Column) 개수
-            const cols = Math.floor(containerWidth / bWidth) || 1;
-            
-            // 데이터 수에 맞춰 세로로 무한히 확장 가능한 촘촘한 가상 슬롯 생성
-            let slots = [];
-            for (let i = 0; i < posts.length * 2; i++) { slots.push(i); }
+            const cols = Math.floor((containerWidth - 20) / cellWidth) || 1;
             
             posts.forEach((post, index) => {
                 let hash = 0;
                 for (let i = 0; i < post.id.length; i++) hash = post.id.charCodeAt(i) + ((hash << 5) - hash);
                 
-                // 가용 슬롯 중 고유 해시 기반으로 무작위 매칭 (순서는 섞이되 겹침은 차단)
-                const slotIndex = Math.abs(hash) % slots.length;
-                const pickedSlot = slots.splice(slotIndex, 1)[0];
-                
-                const col = pickedSlot % cols;
-                const row = Math.floor(pickedSlot / cols);
-                
-                // 버블 간 여백을 좁게(촘촘하게) 잡고, 바둑판 느낌을 지우는 미세 랜덤 오프셋(-5px ~ +5px) 부여
-                const randomOffsetX = (hash % 11) - 5; 
-                const randomOffsetY = ((hash >> 2) % 11) - 5;
+                const col = index % cols;
+                const row = Math.floor(index / cols);
 
-                // 좌우 여백 균등 분배 후 배치
-                let posX = col * bWidth + (containerWidth - (cols * bWidth)) / 2 + randomOffsetX;
-                let posY = row * bHeight + 15 + randomOffsetY;
+                // 칸 안에서 자연스럽게 보이도록 미세한 랜덤 오프셋 부여 (과도한 겹침 차단)
+                const offsetX = (Math.abs(hash * 13) % 30) - 15;
+                const offsetY = (Math.abs(hash * 17) % 30) - 15;
 
-                // 화면 양옆 탈출 방지 마진 수정
-                if (posX > containerWidth - bWidth) posX = containerWidth - bWidth - 5;
-                if (posX < 5) posX = 5;
-                if (posY < 5) posY = 5;
+                // 좌우 여백을 주어 중앙 정렬 느낌 유도
+                const totalGridWidth = cols * cellWidth;
+                const startX = (containerWidth - totalGridWidth) / 2;
+
+                let posX = startX + (col * cellWidth) + offsetX + 10;
+                let posY = 20 + (row * cellHeight) + offsetY;
+
+                // 화면 밖으로 나가지 않도록 안전장치
+                if (posX < 10) posX = 10;
+                if (posX > containerWidth - 100) posX = containerWidth - 100;
 
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'bubble-item';
@@ -344,17 +312,11 @@
                 container.appendChild(itemDiv);
             });
 
-            // 가장 마지막에 가 있는 세로축 버블을 계산하여 컨테이너 높이를 늘려줌 (세로 스크롤 확보)
-            const items = container.getElementsByClassName('bubble-item');
-            let maxHeight = window.innerHeight - 70;
-            for (let i = 0; i < items.length; i++) {
-                let topVal = parseInt(items[i].style.top) + bHeight + 60;
-                if (topVal > maxHeight) maxHeight = topVal;
-            }
-            container.style.height = maxHeight + "px";
+            // 전체 세로 스크롤 높이 동적 확보
+            const totalRows = Math.ceil(posts.length / cols);
+            container.style.height = (totalRows * cellHeight + 100) + "px";
         }
 
-        // [이하 기존과 동일한 Firebase CRUD 및 이미지 압축 코드]
         function savePost(e) {
             e.preventDefault();
             const submitBtn = document.getElementById('submitBtn');
